@@ -1,0 +1,27 @@
+{
+  "template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin",
+  "commit": "e759475d3f8905df4354ca83d8ce6cd632ffce99",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Alexander Fuchs",
+      "email": "alexander.fuchs@physik.hu-berlin.de",
+      "github_username": "FAU-LAP",
+      "plugin_name": "nomad-parser-plugins-camels-files",
+      "module_name": "nomad_parser_plugins_camels_files",
+      "short_description": "Parser for HDF5 files coming from NOMAD CAMELS.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "include_schema_package": true,
+      "include_normalizer": false,
+      "include_parser": true,
+      "include_app": false,
+      "include_example_uploads": false,
+      "_copy_without_render": [
+        "*.html"
+      ],
+      "_template": "https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin"
+    }
+  },
+  "directory": null
+}
