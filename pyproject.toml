@@ -111,7 +111,7 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [project.entry-points.'nomad.plugin']
-parser_entry_point = "nomad_parser_plugins_camels_files.parsers:parser_entry_point"
+parser_entry_point = "nomad_parser_plugins_camels_files.parsers:camels_parser_entry_point"
 
 
 
