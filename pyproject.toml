@@ -112,7 +112,7 @@ where = ["src"]
 
 [project.entry-points.'nomad.plugin']
 parser_entry_point = "nomad_parser_plugins_camels_files.parsers:camels_parser_entry_point"
-
+app_entry_point = "nomad_parser_plugins_camels_files.apps:camels_app"
 
 
 [tool.cruft]
