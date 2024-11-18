@@ -6,6 +6,11 @@ from nomad.config.models.ui import (
     MenuItemHistogram,
     MenuItemTerms,
     SearchQuantities,
+    Dashboard,
+    WidgetTerms,
+    WidgetHistogram,
+    BreakpointEnum,
+    Layout,
 )
 
 schema = 'nomad_parser_plugins_camels_files.parsers.parser.CamelsMeasurement'
@@ -19,12 +24,54 @@ camels_app = AppEntryPoint(
         category='Experiment',
         search_quantities=SearchQuantities(include=[f'*#{schema}']),
         columns=[
-            Column(search_quantity='entry_id', selected=True),
-            Column(search_quantity='entry_name', selected=True),
-            Column(search_quantity='resjunktest', selected=True),
+            Column(search_quantity=f'data.name#{schema}', selected=True),
+            Column(search_quantity=f'data.datetime#{schema}', selected=True),
             Column(search_quantity=f'data.camels_user#{schema}', selected=True),
-            Column(search_quantity='upload_create_time'),
+            Column(search_quantity=f'data.session_name#{schema}', selected=True),
+            Column(search_quantity=f'data.end_time#{schema}'),
+            Column(search_quantity=f'data.protocol_overview#{schema}'),
+            Column(search_quantity=f'data.description#{schema}'),
+
+
         ],
+        dashboard = Dashboard(
+        widgets=[
+            WidgetTerms(
+                title="Search by sample name",
+                type="terms",
+                layout={
+                    BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
+                },
+                search_quantity=f"data.samples.name#{schema}"
+        ),
+            WidgetTerms(
+                title="Search by user",
+                type="terms",
+                layout={
+                    BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
+                },
+                search_quantity=f"data.camels_user#{schema}"
+        ),
+        WidgetTerms(
+            title='Search by instrument name',
+            type='terms',
+            layout={
+                BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
+            },
+            search_quantity=f'data.instruments.name#{schema}'
+        ),
+        WidgetHistogram(
+            title='Search by datetime',
+            type='histogram',
+            layout={
+                BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
+            },
+            x=f'data.datetime#{schema}'
+        ),
+
+
+    ]
+),
         menu=Menu(
             items=[
                 Menu(
@@ -35,7 +82,7 @@ camels_app = AppEntryPoint(
                             options=5,
                         ),
                         MenuItemHistogram(
-                            x=f'data.end_time#{schema}',
+                            x=f'data.datetime#{schema}',
                         ),
                     ],
                 ),
