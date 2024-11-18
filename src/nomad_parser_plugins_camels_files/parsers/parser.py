@@ -15,7 +15,7 @@ from datetime import datetime
 import h5py
 import numpy as np
 from nomad.config import config
-from nomad.datamodel import EntryData
+from nomad.datamodel import Schema
 from nomad.datamodel.datamodel import EntryMetadata
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
@@ -35,7 +35,7 @@ from .utils import create_archive
 m_package = SchemaPackage()
 
 
-class CamelsMeasurement(Measurement, EntryData):
+class CamelsMeasurement(Measurement, Schema):
     m_def = Section(
         a_eln=ELNAnnotation(
             properties=SectionProperties(
@@ -86,7 +86,6 @@ class CamelsMeasurement(Measurement, EntryData):
             label='Session name',
         ),
     )
-
     camels_user = Quantity(
         type=str,
         description='CAMELS User',
@@ -95,7 +94,6 @@ class CamelsMeasurement(Measurement, EntryData):
             label='CAMELS User',
         ),
     )
-
     camels_file = Quantity(
         type=str,
         description='CAMELS file reference',

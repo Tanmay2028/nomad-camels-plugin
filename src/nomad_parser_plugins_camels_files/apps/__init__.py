@@ -1,4 +1,3 @@
-import yaml
 from nomad.config.models.plugins import AppEntryPoint
 from nomad.config.models.ui import (
     App,
@@ -18,13 +17,13 @@ camels_app = AppEntryPoint(
         label='CAMELS App',
         path='myapp',
         category='Experiment',
-        search_quantities=SearchQuantities(include=['*#{schema}']),
+        search_quantities=SearchQuantities(include=[f'*#{schema}']),
         columns=[
-            Column(quantity='entry_id', selected=True),
-            Column(quantity='entry_name', selected=True),
-            Column(quantity='resjunktest', selected=True),
-            Column(quantity=f'data.camels_user#{schema}', selected=True),
-            Column(quantity='upload_create_time'),
+            Column(search_quantity='entry_id', selected=True),
+            Column(search_quantity='entry_name', selected=True),
+            Column(search_quantity='resjunktest', selected=True),
+            Column(search_quantity=f'data.camels_user#{schema}', selected=True),
+            Column(search_quantity='upload_create_time'),
         ],
         menu=Menu(
             items=[
