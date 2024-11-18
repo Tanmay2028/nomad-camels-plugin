@@ -197,9 +197,13 @@ class CamelsParser(MatchingParser):
                 sample_upload_id, sample_entry_id = re.findall(
                     r'upload/id/([^/]+)/entry/id/([^/]+)', sample_id
                 )[0]
+                
+                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][()].decode('utf-8')
+
+                
                 data.samples = [
                     CompositeSystemReference(
-                        name='sample',
+                        name=f'{sample_name}',
                         reference=f'../uploads/{sample_upload_id}/archive/{sample_entry_id}#/data',
                     )
                 ]
@@ -315,6 +319,7 @@ class CamelsParser(MatchingParser):
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # This creates a seperate .archive.yaml file for the data
 
+        from nomad.datamodel.datamodel import EntryArchive
         camels_data_archive = EntryArchive(
             data=data,
             metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
@@ -328,4 +333,5 @@ class CamelsParser(MatchingParser):
             filetype,
             logger,
         )
+        nomad.api.info
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
