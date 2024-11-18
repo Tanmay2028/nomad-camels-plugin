@@ -3,67 +3,72 @@ from nomad.config.models.plugins import AppEntryPoint
 from nomad.config.models.ui import (
     App,
     Column,
-    Columns,
-    FilterMenu,
-    FilterMenus,
-    Filters,
+    Menu,
+    MenuItemHistogram,
+    MenuItemTerms,
+    SearchQuantities,
 )
-schema = 'nomad_parser_plugins_camels_files.parsers.parser.CamelsMeasurement' 
+
+schema = 'nomad_parser_plugins_camels_files.parsers.parser.CamelsMeasurement'
 
 camels_app = AppEntryPoint(
-    name="CAMELS App",
-    description="App that allows you to search and navigate your CAMELS measurements.",
+    name='CAMELS App',
+    description='App that allows you to search and navigate your CAMELS measurements.',
     app=App(
         label='CAMELS App',
         path='myapp',
         category='Experiment',
-        filters=Filters(
-            include=['*#nomad_parser_plugins_camels_files.parsers.parser.CamelsMeasurement'],
-        ),
+        search_quantities=SearchQuantities(include=['*#{schema}']),
         columns=[
             Column(quantity='entry_id', selected=True),
-            Column(
-                quantity=f'entry_name',
-                selected=True
-            ),
-            Column(
-                quantity=f'resjunktest',
-                selected=True
-            ),
-            Column(
-                quantity=f'data.data.camels_user#{schema}',
-                selected=True
-            ),
-            Column(quantity='upload_create_time')
+            Column(quantity='entry_name', selected=True),
+            Column(quantity='resjunktest', selected=True),
+            Column(quantity=f'data.camels_user#{schema}', selected=True),
+            Column(quantity='upload_create_time'),
         ],
-        filter_menus=FilterMenus(
-        options={
-            'custom_quantities': FilterMenu(label='User Defined Quantities'),
-            'author': FilterMenu(label='Author / Origin / Dataset'),
-        }
-        ),
-        filters_locked={
-            'section_defs.definition_qualified_name': [
-                'nomad_parser_plugins_camels_files.parsers.parser.CamelsMeasurement',
+        menu=Menu(
+            items=[
+                Menu(
+                    title='Camels',
+                    items=[
+                        MenuItemTerms(
+                            search_quantity=f'data.session_name#{schema}',
+                            options=5,
+                        ),
+                        MenuItemHistogram(
+                            x=f'data.end_time#{schema}',
+                        ),
+                    ],
+                ),
+                Menu(
+                    title='Author / Origin / Dataset',
+                    items=[
+                        MenuItemTerms(
+                            search_quantity='authors.name',
+                            options=0,
+                        ),
+                        MenuItemHistogram(
+                            x='upload_create_time',
+                        ),
+                        MenuItemTerms(
+                            search_quantity='external_db',
+                            options=5,
+                            show_input=False,
+                        ),
+                        MenuItemTerms(
+                            search_quantity='datasets.dataset_name',
+                        ),
+                        MenuItemTerms(
+                            search_quantity='datasets.doi',
+                            options=0,
+                        ),
+                    ],
+                ),
             ],
-        },
-
-),
+        ),
+        filters_locked={'section_defs.definition_qualified_name': schema},
+    ),
 )
-    
-
-
-
-    
-
-
-
-
-
-
-
-
-
 
 
 # ---------------------------------------------------------------------------------------------------
