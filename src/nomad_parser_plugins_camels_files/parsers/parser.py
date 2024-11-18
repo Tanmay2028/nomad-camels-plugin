@@ -333,5 +333,4 @@ class CamelsParser(MatchingParser):
             filetype,
             logger,
         )
-        nomad.api.info
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
