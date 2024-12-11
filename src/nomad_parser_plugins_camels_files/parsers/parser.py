@@ -26,6 +26,7 @@ from nomad.datamodel.metainfo.basesections import (
     CompositeSystemReference,
     InstrumentReference,
     Measurement,
+    Instrument,
 )
 from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section
 from nomad.parsing.parser import MatchingParser
@@ -40,14 +41,17 @@ class CamelsMeasurement(Measurement, Schema):
         a_eln=ELNAnnotation(
             properties=SectionProperties(
                 visible=Filter(
-                    exclude=['location', 'lab_id'],
+                    exclude=['location', 'lab_id', 'description'],
                 ),
                 order=[
                     'name',
                     'datetime',
                     'end_time',
                     'session_name',
-                    'description',
+                    'measurement_tags',
+                    'measurement_description',
+                    'measurement_comments',
+                    'protocol_description',
                     'protocol_overview',
                     'plan_name',
                     'camels_user',
@@ -56,13 +60,45 @@ class CamelsMeasurement(Measurement, Schema):
             )
         )
     )
-
+    measurement_description = Quantity(
+        type=str,
+        description='Measurement description',
+        a_eln=ELNAnnotation(
+            component='RichTextEditQuantity',
+            label='Measurement description',
+        ),
+    )
+    protocol_description = Quantity(
+        type=str,
+        description='Protocol description',
+        a_eln=ELNAnnotation(
+            component='RichTextEditQuantity',
+            label='Protocol description',
+        ),
+    )
     protocol_overview = Quantity(
         type=str,
         description='Protocol overview',
         a_eln=ELNAnnotation(
             component='RichTextEditQuantity',
             label='Protocol overview',
+        ),
+    )
+    measurement_comments = Quantity(
+        type=str,
+        description='Measurement comments',
+        a_eln=ELNAnnotation(
+            component='RichTextEditQuantity',
+            label='Measurement comments',
+        ),
+    )
+    measurement_tags = Quantity(
+        type=str,
+        shape=['*'],
+        description='Measurement tags',
+        a_eln=ELNAnnotation(
+            component='StringEditQuantity',
+            label='Tags',
         ),
     )
     plan_name = Quantity(
@@ -97,11 +133,12 @@ class CamelsMeasurement(Measurement, Schema):
     camels_file = Quantity(
         type=str,
         description='CAMELS file reference',
-        a_eln=ELNAnnotation(
-            component='FileEditQuantity',
-            label='CAMELS file',
-        ),
-        a_browser=dict(adaptor='RawFileAdaptor', label='CAMELS File'),
+        a_eln=dict(component='FileEditQuantity'),
+        a_browser=dict(adaptor='RawFileAdaptor', label='camels file ref'),
+    )
+    camels_python_script = Quantity(
+        type=str,
+        description='CAMELS Python script reference',
     )
 
 
@@ -128,7 +165,7 @@ class CamelsParser(MatchingParser):
             # Check to make sure the file is a CAMELS file
 
             # Get start time from the file
-            start_time_bytes = hdf5_file[self.camels_entry_name]['experiment_details'][
+            start_time_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'start_time'
             ][()]
             start_time_str = start_time_bytes.decode(
@@ -136,13 +173,13 @@ class CamelsParser(MatchingParser):
             )  # Decode byte string to regular string
             data.datetime = datetime.fromisoformat(start_time_str)
 
-            # Get description from the file
-            description_bytes = hdf5_file[self.camels_entry_name]['experiment_details'][
-                'experiment_description'
+            # Get protocol description from the file
+            description_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'protocol_description'
             ][()]
             # Decode byte string to regular string
             # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
-            data.description = (
+            data.protocol_description = (
                 description_bytes.decode('utf-8')
                 .replace('\n', '<br>')
                 .replace(
@@ -151,8 +188,45 @@ class CamelsParser(MatchingParser):
                 .replace(' ', '&nbsp;')
             )
 
+            # Get measurement description from the file
+            description_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'measurement_description'
+            ][()]
+            # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
+            data.measurement_description = (
+                description_bytes.decode('utf-8')
+                .replace('\n', '<br>')
+                .replace(
+                    '\t', '&nbsp;&nbsp;&nbsp;&nbsp;'
+                )  # Replace tabs with four non-breaking spaces
+                .replace(' ', '&nbsp;')
+            )
+
+            # Get measurement tags from the file
+            tags_bytes_list = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'measurement_tags'
+            ][()]
+            tags_string_list = [item.decode('utf-8') for item in tags_bytes_list]
+            # Get the separated tags, can be white space, comma, semicolon, or newline separated
+            # data.measurement_tags = tags_string_list
+            data.tags = tags_string_list
+
+            # Get measurement comments from the file
+            comments_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'measurement_comments'
+            ][()]
+            # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
+            data.measurement_comments = (
+                comments_bytes.decode('utf-8')
+                .replace('\n', '<br>')
+                .replace(
+                    '\t', '&nbsp;&nbsp;&nbsp;&nbsp;'
+                )  # Replace tabs with four non-breaking spaces
+                .replace(' ', '&nbsp;')
+            )
+            
             # Get protocol overview from the file
-            protocol_bytes = hdf5_file[self.camels_entry_name]['experiment_details'][
+            protocol_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'protocol_overview'
             ][()]
             # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
@@ -166,13 +240,13 @@ class CamelsParser(MatchingParser):
             )
 
             # Get plan name from the file
-            plan_name_bytes = hdf5_file[self.camels_entry_name]['experiment_details'][
+            plan_name_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'plan_name'
             ][()]
             data.plan_name = plan_name_bytes.decode('utf-8')
 
             # Get the end time from the file
-            end_time_bytes = hdf5_file[self.camels_entry_name]['experiment_details'][
+            end_time_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'end_time'
             ][()]
             end_time_str = end_time_bytes.decode('utf-8')
@@ -180,7 +254,7 @@ class CamelsParser(MatchingParser):
 
             # Get the session name from the file
             session_name_bytes = hdf5_file[self.camels_entry_name][
-                'experiment_details'
+                'measurement_details'
             ]['session_name'][()]
             data.session_name = session_name_bytes.decode('utf-8')
             print(data.session_name)
@@ -245,28 +319,39 @@ class CamelsParser(MatchingParser):
                 except KeyError:
                     logger.warning('No regular sample found in the CAMELS file')
 
-            # Reference all the instruments that were used in the experiment
+            # Reference all the instruments that were used in the measurement
             # First get a list of all the instrument IDs
             instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
             for instrument_name in instruments:
-                full_identifier_bytes = hdf5_file[self.camels_entry_name][
+                if 'full_identifier' not in hdf5_file[self.camels_entry_name][
                     'instruments'
-                ][instrument_name]['fabrication']['ELN-metadata']['full_identifier'][()]
-                full_identifier_string = full_identifier_bytes.decode('utf-8')
-                instrument_upload_id, instrument_entry_id = re.findall(
-                    r'upload/id/([^/]+)/entry/id/([^/]+)', full_identifier_string
-                )[0]
-                data.instruments.append(
-                    InstrumentReference(
-                        name=instrument_name,
-                        reference=f'../uploads/{instrument_upload_id}/archive/{instrument_entry_id}#/data',
+                ][instrument_name]['fabrication']['ELN-metadata']:
+                    data.instruments.append(
+                        InstrumentReference(
+                            name=instrument_name,
+                        )
                     )
-                )
+                else:
+                    full_identifier_bytes = hdf5_file[self.camels_entry_name][
+                        'instruments'
+                    ][instrument_name]['fabrication']['ELN-metadata']['full_identifier'][()]
+                    full_identifier_string = full_identifier_bytes.decode('utf-8')
+                    instrument_upload_id, instrument_entry_id = re.findall(
+                        r'upload/id/([^/]+)/entry/id/([^/]+)', full_identifier_string
+                    )[0]
+                    data.instruments.append(
+                        InstrumentReference(
+                            name=instrument_name,
+                            reference=f'../uploads/{instrument_upload_id}/archive/{instrument_entry_id}#/data',
+                        )
+                    )
 
-            # Get the entry id of the CAMELS file that is being uploaded
-            datafile_entry_id = self.archive.entry_id
             # Add the CAMELS data file to the entry
-            data.camels_file = f'../uploads/{datafile_entry_id}/archive/{self._fname}'
+            camels_file_path = re.search(r"/raw/(.*)", mainfile)
+            data.camels_file = camels_file_path.group(1)
+            # data.camels_file = f'../uploads/{datafile_entry_id}/raw/{self._fname}'
+            # data.camels_file = f'../CAMELS_data/{sample_name}/{self._fname}'
+            # /uploads/{upload_id}/archive/{entry_id}#/run/0/calculation/1  # same NOMAD
 
             # Get the user with the user id from the file
             try:
@@ -310,6 +395,15 @@ class CamelsParser(MatchingParser):
                 else:
                     user_id_string = user_id_bytes.decode('utf-8')
                 data.camels_user = user_id_string
+
+            # Get the python script that was used to generate the data
+            try:
+                python_script_bytes = hdf5_file[self.camels_entry_name][
+                    'measurement_details'
+                ]['python_script'][()]
+                data.camels_python_script = python_script_bytes.decode('utf-8')
+            except KeyError:
+                logger.warning('No python script found in the CAMELS file')
 
         # -------------------------------
         # This adds all the data to the .nxs file itself, uncomment if you dont want to have two seperate files.
