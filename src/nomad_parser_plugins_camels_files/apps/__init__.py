@@ -14,8 +14,7 @@ from nomad.config.models.ui import (
     Layout,
 )
 
-schema = 'nomad_parser_plugins_camels_files.schema_package.camels_package.CamelsMeasurement'
-
+schema = 'nomad_parser_plugins_camels_files.schema_packages.camels_package.CamelsMeasurement'
 
 camels_app = AppEntryPoint(
     name='CAMELS App',
@@ -39,45 +38,45 @@ camels_app = AppEntryPoint(
         dashboard = Dashboard(
         widgets=[
             WidgetTerms(
-                title="Search by sample name",
+                title="Sample name",
                 type="terms",
                 layout={
-                    BreakpointEnum.MD: Layout(h=6, w=4, x=0, y=0)
+                    BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
                 },
                 search_quantity=f"data.samples.name#{schema}"
         ),
             WidgetTerms(
-                title="Search by user",
+                title="User",
                 type="terms",
                 layout={
-                    BreakpointEnum.MD: Layout(h=6, w=4, x=0, y=0)
+                    BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
                 },
                 search_quantity=f"data.camels_user#{schema}"
         ),
         WidgetTerms(
-            title='Search by instrument name',
+            title='Instrument name',
             type='terms',
             layout={
-                BreakpointEnum.MD: Layout(h=6, w=4, x=0, y=0)
+                BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
             },
             search_quantity=f'data.instruments.name#{schema}'
         ),
         WidgetHistogram(
-            title='Search by datetime',
+            title='Start time',
             type='histogram',
             layout={
                 BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
             },
             x=f'data.datetime#{schema}'
         ),
-        # WidgetTerms(
-        #     title='Search by measurement tags',
-        #     type='terms',
-        #     layout={
-        #         BreakpointEnum.MD: Layout(h=6, w=4, x=0, y=0)
-        #     },
-        #     search_quantity=f'data.measurement_tags#{schema}'
-        # ),
+        WidgetTerms(
+            title='Tags',
+            type='terms',
+            layout={
+                BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
+            },
+            search_quantity=f'results.eln.tags'
+        ),
 
 
 
