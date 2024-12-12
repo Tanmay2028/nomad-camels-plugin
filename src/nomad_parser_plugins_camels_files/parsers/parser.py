@@ -15,134 +15,14 @@ from datetime import datetime
 import h5py
 import numpy as np
 from nomad.config import config
-from nomad.datamodel import Schema
 from nomad.datamodel.datamodel import EntryMetadata
-from nomad.datamodel.metainfo.annotations import (
-    ELNAnnotation,
-    Filter,
-    SectionProperties,
-)
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystemReference,
     InstrumentReference,
-    Measurement,
-    Instrument,
 )
-from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section
 from nomad.parsing.parser import MatchingParser
-
+from nomad_parser_plugins_camels_files.schema_packages.camels_package import CamelsMeasurement
 from .utils import create_archive
-
-m_package = SchemaPackage()
-
-
-class CamelsMeasurement(Measurement, Schema):
-    m_def = Section(
-        a_eln=ELNAnnotation(
-            properties=SectionProperties(
-                visible=Filter(
-                    exclude=['location', 'lab_id', 'description'],
-                ),
-                order=[
-                    'name',
-                    'datetime',
-                    'end_time',
-                    'session_name',
-                    'measurement_tags',
-                    'measurement_description',
-                    'measurement_comments',
-                    'protocol_description',
-                    'protocol_overview',
-                    'plan_name',
-                    'camels_user',
-                    'camels_file',
-                ],
-            )
-        )
-    )
-    measurement_description = Quantity(
-        type=str,
-        description='Measurement description',
-        a_eln=ELNAnnotation(
-            component='RichTextEditQuantity',
-            label='Measurement description',
-        ),
-    )
-    protocol_description = Quantity(
-        type=str,
-        description='Protocol description',
-        a_eln=ELNAnnotation(
-            component='RichTextEditQuantity',
-            label='Protocol description',
-        ),
-    )
-    protocol_overview = Quantity(
-        type=str,
-        description='Protocol overview',
-        a_eln=ELNAnnotation(
-            component='RichTextEditQuantity',
-            label='Protocol overview',
-        ),
-    )
-    measurement_comments = Quantity(
-        type=str,
-        description='Measurement comments',
-        a_eln=ELNAnnotation(
-            component='RichTextEditQuantity',
-            label='Measurement comments',
-        ),
-    )
-    measurement_tags = Quantity(
-        type=str,
-        shape=['*'],
-        description='Measurement tags',
-        a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='Tags',
-        ),
-    )
-    plan_name = Quantity(
-        type=str,
-        description='Plan name',
-        a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='Plan name',
-        ),
-    )
-    end_time = Quantity(
-        type=Datetime,
-        description='Measurement end time',
-        a_eln=dict(component='DateTimeEditQuantity', label='Measurement end time'),
-    )
-    session_name = Quantity(
-        type=str,
-        description='Session name',
-        a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='Session name',
-        ),
-    )
-    camels_user = Quantity(
-        type=str,
-        description='CAMELS User',
-        a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='CAMELS User',
-        ),
-    )
-    camels_file = Quantity(
-        type=str,
-        description='CAMELS file reference',
-        a_eln=dict(component='FileEditQuantity'),
-        a_browser=dict(adaptor='RawFileAdaptor', label='camels file ref'),
-    )
-    camels_python_script = Quantity(
-        type=str,
-        description='CAMELS Python script reference',
-    )
-
-
-m_package.__init_metainfo__()
 
 
 class CamelsParser(MatchingParser):
@@ -206,10 +86,13 @@ class CamelsParser(MatchingParser):
             tags_bytes_list = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'measurement_tags'
             ][()]
-            tags_string_list = [item.decode('utf-8') for item in tags_bytes_list]
+            print(tags_bytes_list)
+            if len(tags_bytes_list) == 0:
+                tags_string_list = []
+            else:
+                tags_string_list = [item.decode('utf-8') for item in tags_bytes_list]
             # Get the separated tags, can be white space, comma, semicolon, or newline separated
-            # data.measurement_tags = tags_string_list
-            data.tags = tags_string_list
+            data.measurement_tags = tags_string_list
 
             # Get measurement comments from the file
             comments_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
