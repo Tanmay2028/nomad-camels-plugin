@@ -117,6 +117,26 @@ class CamelsMeasurement(Measurement, Schema):
         type=str,
         description='CAMELS Python script reference',
     )
+    camels_instrument_settings = Quantity(
+        type=str,
+        description='CAMELS instrument settings',
+
+    )
+
+    def normalize(self, archive, logger: 'BoundLogger') -> None:
+        """
+        The normalizer that populates results.eln.tags with the tags that were added with the parser. 
+        This is done because the data.measurement_tags are not searchable in the CAMELS App, but they can be modified and viewed in the entry. 
+        The results.eln.tags are searchable/usable in the CAMELS App.
+
+        Args:
+            archive (EntryArchive): The archive containing the section that is being
+            normalized.
+            logger ('BoundLogger'): A structlog logger.
+        """
+        super(CamelsMeasurement, self).normalize(archive, logger)
+        archive.results.eln.tags = archive.data.measurement_tags
+
 
 
 m_package.__init_metainfo__()

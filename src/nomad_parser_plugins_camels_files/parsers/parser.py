@@ -14,6 +14,7 @@ from datetime import datetime
 
 import h5py
 import numpy as np
+import json
 from nomad.config import config
 from nomad.datamodel.datamodel import EntryMetadata
 from nomad.datamodel.metainfo.basesections import (
@@ -86,27 +87,26 @@ class CamelsParser(MatchingParser):
             tags_bytes_list = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'measurement_tags'
             ][()]
-            print(tags_bytes_list)
-            if len(tags_bytes_list) == 0:
-                tags_string_list = []
-            else:
-                tags_string_list = [item.decode('utf-8') for item in tags_bytes_list]
+            tags_string_list = [item.decode('utf-8') for item in tags_bytes_list]
             # Get the separated tags, can be white space, comma, semicolon, or newline separated
             data.measurement_tags = tags_string_list
 
             # Get measurement comments from the file
-            comments_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+            if 'measurement_comments' not in hdf5_file[self.camels_entry_name]['measurement_details']:
+                data.measurement_comments = ''
+            else:
+                comments_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'measurement_comments'
-            ][()]
-            # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
-            data.measurement_comments = (
-                comments_bytes.decode('utf-8')
-                .replace('\n', '<br>')
-                .replace(
-                    '\t', '&nbsp;&nbsp;&nbsp;&nbsp;'
-                )  # Replace tabs with four non-breaking spaces
-                .replace(' ', '&nbsp;')
-            )
+                ][()]
+                # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
+                data.measurement_comments = (
+                    comments_bytes.decode('utf-8')
+                    .replace('\n', '<br>')
+                    .replace(
+                        '\t', '&nbsp;&nbsp;&nbsp;&nbsp;'
+                    )  # Replace tabs with four non-breaking spaces
+                    .replace(' ', '&nbsp;')
+                )
             
             # Get protocol overview from the file
             protocol_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
@@ -229,12 +229,74 @@ class CamelsParser(MatchingParser):
                         )
                     )
 
+            # Get the instrument settings from the file
+            settings_dict = {}  # Dictionary to hold all instruments and their settings
+
+            instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
+            for instrument_name in instruments:
+                settings_dict[instrument_name] = {}  # Initialize a dict for this instrument's settings
+                settings_keys = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'].keys()
+                for key in settings_keys:
+                    # Check if the object is of kind group
+                    if isinstance(hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key], h5py.Group):
+                        settings_dict[instrument_name][key] = {} # Initialize a dict for this key
+                        # Get each element in the group
+                        for sub_key in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key].keys():
+                            settings_value = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key][sub_key][()]
+                            
+                            # Convert numpy scalar to Python type if needed
+                            if hasattr(settings_value, 'shape') and settings_value.shape == ():
+                                settings_value = settings_value.item()
+
+                            # If we have a list or array, decode each element if needed
+                            if isinstance(settings_value, np.ndarray):
+                                # If it's a single-element array
+                                if settings_value.size == 1:
+                                    settings_value = settings_value.item()
+                                else:
+                                    # Handle multi-element arrays here
+                                    decoded_list = []
+                                    for val in settings_value:
+                                        if isinstance(val, bytes):
+                                            val = val.decode('utf-8')
+                                        val = try_convert_to_number(val)
+                                        decoded_list.append(val)
+                                    settings_value = decoded_list if len(decoded_list) > 1 else decoded_list[0]
+                            else:
+                                # If it's already a Python type, just continue
+                                # This includes the later logic you have for single values
+                                if isinstance(settings_value, bytes):
+                                    settings_value = settings_value.decode('utf-8')
+                                settings_value = try_convert_to_number(settings_value)
+
+                            settings_dict[instrument_name][key][sub_key] = settings_value
+                    else:
+                        settings_value = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key][()]
+                        # Decode if bytes
+                        if isinstance(settings_value, bytes):
+                            settings_value = settings_value.decode('utf-8')
+                        # Try to convert to number if possible
+                        settings_value = try_convert_to_number(settings_value)
+                        
+                        settings_dict[instrument_name][key] = settings_value
+
+            # Convert the entire dictionary to a JSON string
+            def ensure_str(obj):
+                if isinstance(obj, dict):
+                    return {k: ensure_str(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [ensure_str(i) for i in obj]
+                elif isinstance(obj, bytes):
+                    return obj.decode('utf-8')
+                else:
+                    return obj
+
+            settings_dict = ensure_str(settings_dict)
+            data.camels_instrument_settings = json.dumps(settings_dict, indent=2)
+
             # Add the CAMELS data file to the entry
             camels_file_path = re.search(r"/raw/(.*)", mainfile)
             data.camels_file = camels_file_path.group(1)
-            # data.camels_file = f'../uploads/{datafile_entry_id}/raw/{self._fname}'
-            # data.camels_file = f'../CAMELS_data/{sample_name}/{self._fname}'
-            # /uploads/{upload_id}/archive/{entry_id}#/run/0/calculation/1  # same NOMAD
 
             # Get the user with the user id from the file
             try:
@@ -311,3 +373,21 @@ class CamelsParser(MatchingParser):
             logger,
         )
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+def try_convert_to_number(value):
+    # Attempt to convert string to a number (int or float)
+    # If it's not numeric, just return the original value.
+    try:
+        # Try int first
+        int_val = int(value)
+        return int_val
+    except ValueError:
+        pass
+
+    try:
+        # Try float if int fails
+        float_val = float(value)
+        return float_val
+    except ValueError:
+        # If both fail, return original value
+        return value
