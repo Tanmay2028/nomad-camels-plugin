@@ -1,8 +1,8 @@
-site_name: nomad-parser-plugins-camels-files
+site_name: nomad-camels-plugin
 site_description: Parser for HDF5 files coming from NOMAD CAMELS.
 site_author: Alexander Fuchs
 
-repo_url: https://github.com/FAU-LAP/nomad-parser-plugins-camels-files
+repo_url: https://github.com/FAIRmat-NFDI/nomad-camels-plugin
 edit_uri: ""
 
 nav:

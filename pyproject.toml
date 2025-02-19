@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
 ]
-name = "nomad-parser-plugins-camels-files"
+name = "nomad-camels-plugin"
 description = "Parser for HDF5 files coming from NOMAD CAMELS."
 version = "0.1.0"
 readme = "README.md"
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/FAU-LAP/nomad-parser-plugins-camels-files"
+Repository = "https://github.com/FAIRmat-NFDI/nomad-camels-plugin"
 
 [project.optional-dependencies]
 dev = ["ruff", "pytest", "structlog"]

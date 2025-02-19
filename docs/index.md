@@ -1,4 +1,4 @@
-# Welcome to the `nomad-parser-plugins-camels-files` documentation
+# Welcome to the `nomad-camels-plugin` documentation
 
 Parser for HDF5 files coming from NOMAD CAMELS.
 
