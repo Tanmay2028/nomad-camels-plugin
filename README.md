@@ -1,112 +1,8 @@
-# nomad-parser-plugins-camels-files
+# NOMAD CAMELS Plugin
 
-Parser for HDF5 files coming from NOMAD CAMELS.
+Plugin for HDF5 (`.nxs`) files coming from NOMAD CAMELS.
 
 This `nomad` plugin was generated with `Cookiecutter` along with `@nomad`'s [`cookiecutter-nomad-plugin`](https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin) template.
-
-
-## Development
-
-If you want to develop locally this plugin, clone the project and in the plugin folder, create a virtual environment (you can use Python 3.9, 3.10, or 3.11):
-```sh
-git clone https://github.com/FAU-LAP/nomad-parser-plugins-camels-files.git
-cd nomad-parser-plugins-camels-files
-python3.11 -m venv .pyenv
-. .pyenv/bin/activate
-```
-
-Make sure to have `pip` upgraded:
-```sh
-pip install --upgrade pip
-```
-
-We recommend installing `uv` for fast pip installation of the packages:
-```sh
-pip install uv
-```
-
-Install the `nomad-lab` package:
-```sh
-uv pip install '.[dev]' --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
-```
-
-**Note!**
-Until we have an official pypi NOMAD release with the plugins functionality make
-sure to include NOMAD's internal package registry (via `--index-url` in the above command).
-
-The plugin is still under development. If you would like to contribute, install the package in editable mode (with the added `-e` flag):
-```sh
-uv pip install -e '.[dev]' --index-url https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple
-```
-
-
-### Run the tests
-
-You can run locally the tests:
-```sh
-python -m pytest -sv tests
-```
-
-where the `-s` and `-v` options toggle the output verbosity.
-
-Our CI/CD pipeline produces a more comprehensive test report using the `pytest-cov` package. You can generate a local coverage report:
-```sh
-uv pip install pytest-cov
-python -m pytest --cov=src tests
-```
-
-### Run linting and auto-formatting
-
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting the code. Ruff auto-formatting is also a part of the GitHub workflow actions. You can run locally:
-```sh
-ruff check .
-ruff format . --check
-```
-
-
-### Debugging
-
-For interactive debugging of the tests, use `pytest` with the `--pdb` flag. We recommend using an IDE for debugging, e.g., _VSCode_. If that is the case, add the following snippet to your `.vscode/launch.json`:
-```json
-{
-  "configurations": [
-      {
-        "name": "<descriptive tag>",
-        "type": "debugpy",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "program": "${workspaceFolder}/.pyenv/bin/pytest",
-        "justMyCode": true,
-        "env": {
-            "_PYTEST_RAISE": "1"
-        },
-        "args": [
-            "-sv",
-            "--pdb",
-            "<path-to-plugin-tests>",
-        ]
-    }
-  ]
-}
-```
-
-where `<path-to-plugin-tests>` must be changed to the local path to the test module to be debugged.
-
-The settings configuration file `.vscode/settings.json` automatically applies the linting and formatting upon saving the modified file.
-
-
-### Documentation on Github pages
-
-To view the documentation locally, install the related packages using:
-```sh
-uv pip install -r requirements_docs.txt
-```
-
-Run the documentation server:
-```sh
-mkdocs serve
-```
-
 
 ## Adding this plugin to NOMAD
 
@@ -160,7 +56,7 @@ on the [PyPI documentation](https://packaging.python.org/en/latest/tutorials/pac
 
 ### Template update
 
-We use cruft to update the project based on template changes. A `cruft-update.yml` is included in Github workflows to automatically check for updates and create pull requests to apply updates. Follow the [instructions](https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/) on how to enable Github Actions to create pull requests. 
+We use cruft to update the project based on template changes. A `cruft-update.yml` is included in Github workflows to automatically check for updates and create pull requests to apply updates. Follow the [instructions](https://github.blog/changelog/2022-05-03-github-actions-prevent-github-actions-from-creating-and-approving-pull-requests/) on how to enable Github Actions to create pull requests.
 
 To run the check for updates locally, follow the instructions on [`cruft` website](https://cruft.github.io/cruft/#updating-a-project).
 
