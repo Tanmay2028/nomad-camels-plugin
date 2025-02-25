@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Iterable
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
@@ -359,6 +359,7 @@ class CamelsParser(MatchingParser):
         # This creates a seperate .archive.yaml file for the data
 
         from nomad.datamodel.datamodel import EntryArchive
+
         camels_data_archive = EntryArchive(
             data=data,
             metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
@@ -373,6 +374,41 @@ class CamelsParser(MatchingParser):
             logger,
         )
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    def is_mainfile(self, filename: str, mime: str, buffer: bytes, decoded_buffer: str, compression: str = None) -> Union[bool, Iterable[str]]:
+        # First, run the parent's method.
+        result = super().is_mainfile(filename, mime, buffer, decoded_buffer, compression)
+        # print(filename)
+        # if filename.endswith('.h5') or filename.endswith('.hdf5') or filename.endswith('.nxs'):
+        #     with h5py.File(filename, 'r') as f:
+        #         for key, value in f.attrs.items():
+        #             print(key, value)        
+        # If the parent's method returns False (or any value indicating a failure), return immediately.
+        if not result:
+            return result
+        try:
+            with h5py.File(filename, 'r') as f:
+                # The attribute might be bytes, so decode if necessary
+                file_type_value = f.attrs.get('file_type')
+                if file_type_value is None:
+                    print("\nNo file_type attribute found in the file.")
+                    # Check to see if the file is a legacy CAMELS file
+                    # Check if CAMELS_ is in any of the top level keys of the HDF5 file
+                    if any('CAMELS_' in key for key in f.keys()):
+                        print("File is an older 'NOMAD CAMELS' file.")
+                        return True
+                    else:
+                        print("File is not a 'NOMAD CAMELS' file.")
+                    return False
+        except Exception as e:
+            print(f"\nError while checking file type: {e}")
+            return False
+        if file_type_value == 'NOMAD CAMELS':
+            print("File is a 'NOMAD CAMELS' file.")
+            return True
+        else:
+            print("file type is not 'NOMAD CAMELS', but: ", file_type_value)
+            return False
 
 def try_convert_to_number(value):
     # Attempt to convert string to a number (int or float)
