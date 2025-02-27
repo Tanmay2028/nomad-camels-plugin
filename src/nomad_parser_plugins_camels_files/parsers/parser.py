@@ -378,11 +378,6 @@ class CamelsParser(MatchingParser):
     def is_mainfile(self, filename: str, mime: str, buffer: bytes, decoded_buffer: str, compression: str = None) -> Union[bool, Iterable[str]]:
         # First, run the parent's method.
         result = super().is_mainfile(filename, mime, buffer, decoded_buffer, compression)
-        # print(filename)
-        # if filename.endswith('.h5') or filename.endswith('.hdf5') or filename.endswith('.nxs'):
-        #     with h5py.File(filename, 'r') as f:
-        #         for key, value in f.attrs.items():
-        #             print(key, value)        
         # If the parent's method returns False (or any value indicating a failure), return immediately.
         if not result:
             return result
