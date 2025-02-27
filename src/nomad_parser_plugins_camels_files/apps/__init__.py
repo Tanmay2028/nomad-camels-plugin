@@ -35,93 +35,85 @@ camels_app = AppEntryPoint(
 
 
         ],
-        dashboard = Dashboard(
-        widgets=[
-            WidgetTerms(
-                title="Sample name",
-                type="terms",
-                layout={
-                    BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-                },
-                search_quantity=f"data.samples.name#{schema}"
-        ),
-            WidgetTerms(
-                title="User",
-                type="terms",
-                layout={
-                    BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-                },
-                search_quantity=f"data.camels_user#{schema}"
-        ),
-        WidgetTerms(
-            title='Instrument name',
-            type='terms',
-            layout={
-                BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-            },
-            search_quantity=f'data.instruments.name#{schema}'
-        ),
-        WidgetHistogram(
-            title='Start time',
-            type='histogram',
-            layout={
-                BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
-            },
-            x=f'data.datetime#{schema}'
-        ),
-        WidgetTerms(
-            title='Tags',
-            type='terms',
-            layout={
-                BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-            },
-            search_quantity=f'results.eln.tags'
-        ),
+        # dashboard = Dashboard(
+        # widgets=[
+#             WidgetTerms(
+#                 title="Sample name",
+#                 type="terms",
+#                 layout={
+#                     BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
+#                 },
+#                 search_quantity=f"data.samples.name#{schema}"
+#         ),
+#             WidgetTerms(
+#                 title="User",
+#                 type="terms",
+#                 layout={
+#                     BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
+#                 },
+#                 search_quantity=f"data.camels_user#{schema}"
+#         ),
+#         WidgetTerms(
+#             title='Instrument name',
+#             type='terms',
+#             layout={
+#                 BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
+#             },
+#             search_quantity=f'data.instruments.name#{schema}'
+#         ),
+#         WidgetHistogram(
+#             title='Start time',
+#             type='histogram',
+#             layout={
+#                 BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
+#             },
+#             x=f'data.datetime#{schema}'
+#         ),
+#         WidgetTerms(
+#             title='Tags',
+#             type='terms',
+#             layout={
+#                 BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
+#             },
+#             search_quantity=f'results.eln.tags'
+#         ),
 
 
 
-    ]
-),
+#     ]
+# ),
         menu=Menu(
             items=[
-                Menu(
-                    title='Camels',
-                    items=[
-                        MenuItemTerms(
+                MenuItemTerms(
+                title="Sample name",
+                type="terms",
+                search_quantity=f"data.samples.name#{schema}"
+                ),
+                MenuItemHistogram(
+                    title='Start time',
+                    type='histogram',
+                    x=f'data.datetime#{schema}'
+                ),
+                MenuItemTerms(
                             search_quantity=f'data.session_name#{schema}',
                             options=5,
                         ),
-                        MenuItemCustomQuantities(
-
-                        ),
-                        MenuItemHistogram(
-                            x=f'data.datetime#{schema}',
-                        ),
-                    ],
+                MenuItemTerms(
+                    title='Tags',
+                    type='terms',
+                    search_quantity=f'results.eln.tags'
                 ),
-                Menu(
-                    title='Author / Origin / Dataset',
-                    items=[
-                        MenuItemTerms(
-                            search_quantity='authors.name',
-                            options=0,
-                        ),
-                        MenuItemHistogram(
-                            x='upload_create_time',
-                        ),
-                        MenuItemTerms(
-                            search_quantity='external_db',
-                            options=5,
-                            show_input=False,
-                        ),
-                        MenuItemTerms(
-                            search_quantity='datasets.dataset_name',
-                        ),
-                        MenuItemTerms(
-                            search_quantity='datasets.doi',
-                            options=0,
-                        ),
-                    ],
+                MenuItemTerms(
+                    title="User",
+                    type="terms",
+                    search_quantity=f"data.camels_user#{schema}"
+                ),
+                MenuItemTerms(
+                    title='Instrument name',
+                    type='terms',
+                    search_quantity=f'data.instruments.name#{schema}'
+                ),
+                MenuItemCustomQuantities(
                 ),
             ],
         ),
