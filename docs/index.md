@@ -10,7 +10,7 @@ This plugin provides NOMAD schemas, parsers and a search app for data coming fro
 These are the 
 
 <div markdown="block" class="home-grid">
-<div markdown="block">
+<!-- <div markdown="block">
 
 ### Tutorial
 
@@ -18,7 +18,7 @@ TODO
 
 - [Tutorial](tutorial/tutorial.md)
 
-</div>
+</div> -->
 <div markdown="block">
 
 ### How-to guides
