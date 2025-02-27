@@ -288,6 +288,8 @@ class CamelsParser(MatchingParser):
                     return [ensure_str(i) for i in obj]
                 elif isinstance(obj, bytes):
                     return obj.decode('utf-8')
+                elif isinstance(obj, np.ndarray):
+                    return ensure_str(obj.tolist())
                 else:
                     return obj
 
@@ -412,13 +414,14 @@ def try_convert_to_number(value):
         # Try int first
         int_val = int(value)
         return int_val
-    except ValueError:
+    except (ValueError, TypeError):
         pass
+
 
     try:
         # Try float if int fails
         float_val = float(value)
         return float_val
-    except ValueError:
+    except (ValueError, TypeError):
         # If both fail, return original value
         return value
