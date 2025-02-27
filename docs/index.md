@@ -1,11 +1,13 @@
-# Welcome to the `nomad-camels-plugin` documentation
+# Welcome to the NOMAD CAMELS Plugin Documentation
 
-Parser for HDF5 files coming from NOMAD CAMELS.
+This plugin provides NOMAD schemas, parsers and a search app for data coming from [NOMAD CAMELS](https://fau-lap.github.io/NOMAD-CAMELS/). It allows you to automatically read and process your CAMELS measurement files in NOMAD and gives an easy-to-use search app to filter and search through all your measurements.
+
+!!! note "CAMELS File Upload"
+    You can either manually upload your CAMELS files to NOMAD or you can login to NOMAD **within** CAMELS and **automatically** upload your measurements to NOMAD.
 
 ## Introduction
 
-!!! note "Attention"
-    TODO
+These are the 
 
 <div markdown="block" class="home-grid">
 <div markdown="block">
@@ -30,19 +32,19 @@ How-to guides provide step-by-step instructions for a wide range of tasks, with 
 
 </div>
 
-<div markdown="block">
+<!-- <div markdown="block">
 
 ### Explanation
 
 The explanation [section](explanation/explanation.md) provides background knowledge on this plugin.
 
-</div>
-<div markdown="block">
+</div> -->
+<!-- <div markdown="block">
 
 ### Reference
 
 The reference [section](reference/references.md) includes all CLI commands and arguments, all configuration options,
 the possible schema annotations and their arguments, and a glossary of used terms.
 
-</div>
+</div> -->
 </div>
