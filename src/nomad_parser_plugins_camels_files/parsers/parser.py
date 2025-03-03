@@ -324,7 +324,7 @@ class CamelsParser(MatchingParser):
                         first_name = response_dict['data'][0].get('first_name', '')
                         last_name = response_dict['data'][0].get('last_name', '')
                     else:
-                        raise Exception('No user found with the given user id')
+                        raise KeyError('No user found with the given user id')
                 else:
                     raise Exception(
                         f'Error while fetching user data from the database.\nStatus code: {response.status_code}'
