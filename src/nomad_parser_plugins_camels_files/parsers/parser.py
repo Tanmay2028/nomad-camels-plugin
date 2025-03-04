@@ -124,10 +124,10 @@ class CamelsParser(MatchingParser):
             )
 
             # Get plan name from the file
-            plan_name_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+            protocol_name_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'plan_name'
             ][()]
-            data.plan_name = plan_name_bytes.decode('utf-8').removesuffix("_plan")
+            data.protocol_name = protocol_name_bytes.decode('utf-8').removesuffix("_plan")
 
             # Get the end time from the file
             end_time_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][

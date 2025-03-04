@@ -30,7 +30,7 @@ class CamelsMeasurement(Measurement, Schema):
                     'measurement_comments',
                     'protocol_description',
                     'protocol_overview',
-                    'plan_name',
+                    'protocol_name',
                     'camels_user',
                     'camels_file',
                 ],
@@ -78,7 +78,7 @@ class CamelsMeasurement(Measurement, Schema):
             label='Tags',
         ),
     )
-    plan_name = Quantity(
+    protocol_name = Quantity(
         type=str,
         description='Plan name',
         a_eln=ELNAnnotation(
@@ -125,8 +125,8 @@ class CamelsMeasurement(Measurement, Schema):
 
     def normalize(self, archive, logger: 'BoundLogger') -> None:
         """
-        The normalizer that populates results.eln.tags with the tags that were added with the parser. 
-        This is done because the data.measurement_tags are not searchable in the CAMELS App, but they can be modified and viewed in the entry. 
+        The normalizer that populates results.eln.tags with the tags that were added with the parser.
+        This is done because the data.measurement_tags are not searchable in the CAMELS App, but they can be modified and viewed in the entry.
         The results.eln.tags are searchable/usable in the CAMELS App.
 
         Args:

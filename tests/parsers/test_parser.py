@@ -19,7 +19,7 @@ def test_parse_CAMELS_file_exact_values():
                                         "&nbsp;&nbsp;&nbsp;&nbsp;Values:&nbsp;(start:&nbsp;-1,&nbsp;stop:&nbsp;1,&nbsp;points:&nbsp;11):")
     assert data.measurement_comments == "2025-03-04T18:14:46&nbsp;Live&nbsp;Comment"
     assert data.measurement_tags == ["Tag 1", "Tag 2"]
-    assert data.plan_name == "Protocol"
+    assert data.protocol_name == "Protocol"
     assert data.end_time.isoformat() == "2025-03-04T17:14:55.439912+00:00"
     assert data.session_name == "Session Name"
     assert data.camels_file == "test_CAMELS_file.nxs"
@@ -75,8 +75,8 @@ def test_parse_CAMELS_file_exact_values():
     assert '&nbsp;' in data.protocol_overview
 
     # Assert that the plan name is a non-empty string
-    assert isinstance(data.plan_name, str)
-    assert data.plan_name != ''
+    assert isinstance(data.protocol_name, str)
+    assert data.protocol_name != ''
 
     # Assert that the end time is parsed into a datetime object
     assert isinstance(data.end_time, datetime.datetime)
