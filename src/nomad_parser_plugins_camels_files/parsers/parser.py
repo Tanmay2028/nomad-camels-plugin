@@ -33,6 +33,7 @@ class CamelsParser(MatchingParser):
         archive: 'EntryArchive',
         logger: 'BoundLogger',
         child_archives: dict[str, 'EntryArchive'] = None,
+        testing: bool = False,
     ) -> None:
         self.archive = archive
         *_, self._fname = mainfile.rsplit('/', 1)
@@ -107,7 +108,7 @@ class CamelsParser(MatchingParser):
                     )  # Replace tabs with four non-breaking spaces
                     .replace(' ', '&nbsp;')
                 )
-            
+
             # Get protocol overview from the file
             protocol_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'protocol_overview'
@@ -126,7 +127,7 @@ class CamelsParser(MatchingParser):
             plan_name_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
                 'plan_name'
             ][()]
-            data.plan_name = plan_name_bytes.decode('utf-8')
+            data.plan_name = plan_name_bytes.decode('utf-8').removesuffix("_plan")
 
             # Get the end time from the file
             end_time_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
@@ -146,6 +147,11 @@ class CamelsParser(MatchingParser):
 
             # Reference the sample by getting sample and upload id and adding it to the default data.sample
             try:
+                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][()].decode('utf-8')
+            except KeyError:
+                logger.warning('No sample name found in the CAMELS file')
+                sample_name = ''
+            try:
                 sample_id_bytes = hdf5_file[self.camels_entry_name]['sample'][
                     'identifier'
                 ]['full_identifier'][()]
@@ -154,10 +160,10 @@ class CamelsParser(MatchingParser):
                 sample_upload_id, sample_entry_id = re.findall(
                     r'upload/id/([^/]+)/entry/id/([^/]+)', sample_id
                 )[0]
-                
+
                 sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][()].decode('utf-8')
 
-                
+
                 data.samples = [
                     CompositeSystemReference(
                         name=f'{sample_name}',
@@ -200,7 +206,12 @@ class CamelsParser(MatchingParser):
                             )
                         ]
                 except KeyError:
-                    logger.warning('No regular sample found in the CAMELS file')
+                    data.samples = [
+                        CompositeSystemReference(
+                            name=f'{sample_name}',
+                        )
+                    ]
+                    logger.warning('No sample found in the NOMAD server. Only using the sample name.')
 
             # Reference all the instruments that were used in the measurement
             # First get a list of all the instrument IDs
@@ -243,7 +254,7 @@ class CamelsParser(MatchingParser):
                         # Get each element in the group
                         for sub_key in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key].keys():
                             settings_value = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key][sub_key][()]
-                            
+
                             # Convert numpy scalar to Python type if needed
                             if hasattr(settings_value, 'shape') and settings_value.shape == ():
                                 settings_value = settings_value.item()
@@ -277,7 +288,7 @@ class CamelsParser(MatchingParser):
                             settings_value = settings_value.decode('utf-8')
                         # Try to convert to number if possible
                         settings_value = try_convert_to_number(settings_value)
-                        
+
                         settings_dict[instrument_name][key] = settings_value
 
             # Convert the entire dictionary to a JSON string
@@ -359,22 +370,24 @@ class CamelsParser(MatchingParser):
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # This creates a seperate .archive.yaml file for the data
+        if not testing:
+            from nomad.datamodel.datamodel import EntryArchive
 
-        from nomad.datamodel.datamodel import EntryArchive
-
-        camels_data_archive = EntryArchive(
-            data=data,
-            metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
-        )
-        filetype = 'json'
-        filename = f'{self._fname}.archive.{filetype}'
-        create_archive(
-            camels_data_archive.m_to_dict(),
-            archive.m_context,
-            filename,
-            filetype,
-            logger,
-        )
+            camels_data_archive = EntryArchive(
+                data=data,
+                metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
+            )
+            filetype = 'json'
+            filename = f'{self._fname}.archive.{filetype}'
+            create_archive(
+                camels_data_archive.m_to_dict(),
+                archive.m_context,
+                filename,
+                filetype,
+                logger,
+            )
+        else:
+            return data
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     def is_mainfile(self, filename: str, mime: str, buffer: bytes, decoded_buffer: str, compression: str = None) -> Union[bool, Iterable[str]]:
