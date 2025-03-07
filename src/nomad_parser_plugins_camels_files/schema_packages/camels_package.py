@@ -7,6 +7,7 @@ from nomad.datamodel.metainfo.annotations import (
 from nomad.datamodel.metainfo.basesections import (
     Measurement,
 )
+from nomad.datamodel.hdf5 import HDF5Reference
 from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section
 
 
@@ -121,6 +122,9 @@ class CamelsMeasurement(Measurement, Schema):
         type=str,
         description='CAMELS instrument settings',
 
+    )
+    hdf5_file = Quantity(
+        type=HDF5Reference,
     )
 
     def normalize(self, archive, logger: 'BoundLogger') -> None:

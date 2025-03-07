@@ -217,9 +217,10 @@ class CamelsParser(MatchingParser):
             # First get a list of all the instrument IDs
             instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
             for instrument_name in instruments:
-                if 'full_identifier' not in hdf5_file[self.camels_entry_name][
-                    'instruments'
-                ][instrument_name]['fabrication']['ELN-metadata']:
+                # First check if ELN-metadata exists
+                if ('fabrication' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name] or
+                    'ELN-metadata' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['fabrication'] or
+                    'full_identifier' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['fabrication']['ELN-metadata']):
                     data.instruments.append(
                         InstrumentReference(
                             name=instrument_name,
@@ -362,6 +363,8 @@ class CamelsParser(MatchingParser):
                 data.camels_python_script = python_script_bytes.decode('utf-8')
             except KeyError:
                 logger.warning('No python script found in the CAMELS file')
+
+            data.hdf5_file = f'CAMELS_data/{sample_name}/{self._fname}#/{self.camels_entry_name}/data'
 
         # -------------------------------
         # This adds all the data to the .nxs file itself, uncomment if you dont want to have two seperate files.
