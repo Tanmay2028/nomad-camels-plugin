@@ -8,7 +8,7 @@ from nomad.datamodel.metainfo.basesections import (
     Measurement,
 )
 from nomad.datamodel.hdf5 import HDF5Reference
-from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section
+from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section, JSON
 
 
 m_package = SchemaPackage()
@@ -62,6 +62,10 @@ class CamelsMeasurement(Measurement, Schema):
             label='Protocol overview',
         ),
     )
+    protocol_json = Quantity(
+        type=JSON,
+        description='Protocol JSON',
+    )
     measurement_comments = Quantity(
         type=str,
         description='Measurement comments',
@@ -81,10 +85,10 @@ class CamelsMeasurement(Measurement, Schema):
     )
     protocol_name = Quantity(
         type=str,
-        description='Plan name',
+        description='Protocol name',
         a_eln=ELNAnnotation(
             component='StringEditQuantity',
-            label='Plan name',
+            label='Protocol name',
         ),
     )
     end_time = Quantity(
@@ -119,7 +123,7 @@ class CamelsMeasurement(Measurement, Schema):
         description='CAMELS Python script reference',
     )
     camels_instrument_settings = Quantity(
-        type=str,
+        type=JSON,
         description='CAMELS instrument settings',
 
     )

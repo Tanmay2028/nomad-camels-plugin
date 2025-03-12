@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Union, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from nomad.datamodel.datamodel import (
@@ -11,10 +12,10 @@ if TYPE_CHECKING:
 import os
 import re
 from datetime import datetime
+import json
 
 import h5py
 import numpy as np
-import json
 from nomad.config import config
 from nomad.datamodel.datamodel import EntryMetadata
 from nomad.datamodel.metainfo.basesections import (
@@ -22,7 +23,11 @@ from nomad.datamodel.metainfo.basesections import (
     InstrumentReference,
 )
 from nomad.parsing.parser import MatchingParser
-from nomad_parser_plugins_camels_files.schema_packages.camels_package import CamelsMeasurement
+
+from nomad_parser_plugins_camels_files.schema_packages.camels_package import (
+    CamelsMeasurement,
+)
+
 from .utils import create_archive
 
 
@@ -56,9 +61,9 @@ class CamelsParser(MatchingParser):
             data.datetime = datetime.fromisoformat(start_time_str)
 
             # Get protocol description from the file
-            description_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
-                'protocol_description'
-            ][()]
+            description_bytes = hdf5_file[self.camels_entry_name][
+                'measurement_details'
+            ]['protocol_description'][()]
             # Decode byte string to regular string
             # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
             data.protocol_description = (
@@ -71,9 +76,9 @@ class CamelsParser(MatchingParser):
             )
 
             # Get measurement description from the file
-            description_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
-                'measurement_description'
-            ][()]
+            description_bytes = hdf5_file[self.camels_entry_name][
+                'measurement_details'
+            ]['measurement_description'][()]
             # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
             data.measurement_description = (
                 description_bytes.decode('utf-8')
@@ -93,12 +98,15 @@ class CamelsParser(MatchingParser):
             data.measurement_tags = tags_string_list
 
             # Get measurement comments from the file
-            if 'measurement_comments' not in hdf5_file[self.camels_entry_name]['measurement_details']:
+            if (
+                'measurement_comments'
+                not in hdf5_file[self.camels_entry_name]['measurement_details']
+            ):
                 data.measurement_comments = ''
             else:
-                comments_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
-                'measurement_comments'
-                ][()]
+                comments_bytes = hdf5_file[self.camels_entry_name][
+                    'measurement_details'
+                ]['measurement_comments'][()]
                 # encode the spaces and new line characters in HTML so that the richtext field displays them correctly
                 data.measurement_comments = (
                     comments_bytes.decode('utf-8')
@@ -124,10 +132,18 @@ class CamelsParser(MatchingParser):
             )
 
             # Get plan name from the file
-            protocol_name_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
-                'plan_name'
+            protocol_name_bytes = hdf5_file[self.camels_entry_name][
+                'measurement_details'
+            ]['plan_name'][()]
+            data.protocol_name = protocol_name_bytes.decode('utf-8').removesuffix(
+                '_plan'
+            )
+
+            # Get protocol json from the file
+            protocol_json_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'protocol_json'
             ][()]
-            data.protocol_name = protocol_name_bytes.decode('utf-8').removesuffix("_plan")
+            data.protocol_json = json.loads(protocol_json_bytes.decode('utf-8'))
 
             # Get the end time from the file
             end_time_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
@@ -147,7 +163,9 @@ class CamelsParser(MatchingParser):
 
             # Reference the sample by getting sample and upload id and adding it to the default data.sample
             try:
-                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][()].decode('utf-8')
+                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][
+                    ()
+                ].decode('utf-8')
             except KeyError:
                 logger.warning('No sample name found in the CAMELS file')
                 sample_name = ''
@@ -161,8 +179,9 @@ class CamelsParser(MatchingParser):
                     r'upload/id/([^/]+)/entry/id/([^/]+)', sample_id
                 )[0]
 
-                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][()].decode('utf-8')
-
+                sample_name = hdf5_file[self.camels_entry_name]['sample']['name'][
+                    ()
+                ].decode('utf-8')
 
                 data.samples = [
                     CompositeSystemReference(
@@ -211,16 +230,29 @@ class CamelsParser(MatchingParser):
                             name=f'{sample_name}',
                         )
                     ]
-                    logger.warning('No sample found in the NOMAD server. Only using the sample name.')
+                    logger.warning(
+                        'No sample found in the NOMAD server. Only using the sample name.'
+                    )
 
             # Reference all the instruments that were used in the measurement
             # First get a list of all the instrument IDs
             instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
             for instrument_name in instruments:
                 # First check if ELN-metadata exists
-                if ('fabrication' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name] or
-                    'ELN-metadata' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['fabrication'] or
-                    'full_identifier' not in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['fabrication']['ELN-metadata']):
+                if (
+                    'fabrication'
+                    not in hdf5_file[self.camels_entry_name]['instruments'][
+                        instrument_name
+                    ]
+                    or 'ELN-metadata'
+                    not in hdf5_file[self.camels_entry_name]['instruments'][
+                        instrument_name
+                    ]['fabrication']
+                    or 'full_identifier'
+                    not in hdf5_file[self.camels_entry_name]['instruments'][
+                        instrument_name
+                    ]['fabrication']['ELN-metadata']
+                ):
                     data.instruments.append(
                         InstrumentReference(
                             name=instrument_name,
@@ -229,7 +261,9 @@ class CamelsParser(MatchingParser):
                 else:
                     full_identifier_bytes = hdf5_file[self.camels_entry_name][
                         'instruments'
-                    ][instrument_name]['fabrication']['ELN-metadata']['full_identifier'][()]
+                    ][instrument_name]['fabrication']['ELN-metadata'][
+                        'full_identifier'
+                    ][()]
                     full_identifier_string = full_identifier_bytes.decode('utf-8')
                     instrument_upload_id, instrument_entry_id = re.findall(
                         r'upload/id/([^/]+)/entry/id/([^/]+)', full_identifier_string
@@ -246,18 +280,36 @@ class CamelsParser(MatchingParser):
 
             instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
             for instrument_name in instruments:
-                settings_dict[instrument_name] = {}  # Initialize a dict for this instrument's settings
-                settings_keys = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'].keys()
+                settings_dict[
+                    instrument_name
+                ] = {}  # Initialize a dict for this instrument's settings
+                settings_keys = hdf5_file[self.camels_entry_name]['instruments'][
+                    instrument_name
+                ]['settings'].keys()
                 for key in settings_keys:
                     # Check if the object is of kind group
-                    if isinstance(hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key], h5py.Group):
-                        settings_dict[instrument_name][key] = {} # Initialize a dict for this key
+                    if isinstance(
+                        hdf5_file[self.camels_entry_name]['instruments'][
+                            instrument_name
+                        ]['settings'][key],
+                        h5py.Group,
+                    ):
+                        settings_dict[instrument_name][
+                            key
+                        ] = {}  # Initialize a dict for this key
                         # Get each element in the group
-                        for sub_key in hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key].keys():
-                            settings_value = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key][sub_key][()]
+                        for sub_key in hdf5_file[self.camels_entry_name]['instruments'][
+                            instrument_name
+                        ]['settings'][key].keys():
+                            settings_value = hdf5_file[self.camels_entry_name][
+                                'instruments'
+                            ][instrument_name]['settings'][key][sub_key][()]
 
                             # Convert numpy scalar to Python type if needed
-                            if hasattr(settings_value, 'shape') and settings_value.shape == ():
+                            if (
+                                hasattr(settings_value, 'shape')
+                                and settings_value.shape == ()
+                            ):
                                 settings_value = settings_value.item()
 
                             # If we have a list or array, decode each element if needed
@@ -273,7 +325,11 @@ class CamelsParser(MatchingParser):
                                             val = val.decode('utf-8')
                                         val = try_convert_to_number(val)
                                         decoded_list.append(val)
-                                    settings_value = decoded_list if len(decoded_list) > 1 else decoded_list[0]
+                                    settings_value = (
+                                        decoded_list
+                                        if len(decoded_list) > 1
+                                        else decoded_list[0]
+                                    )
                             else:
                                 # If it's already a Python type, just continue
                                 # This includes the later logic you have for single values
@@ -281,9 +337,13 @@ class CamelsParser(MatchingParser):
                                     settings_value = settings_value.decode('utf-8')
                                 settings_value = try_convert_to_number(settings_value)
 
-                            settings_dict[instrument_name][key][sub_key] = settings_value
+                            settings_dict[instrument_name][key][sub_key] = (
+                                settings_value
+                            )
                     else:
-                        settings_value = hdf5_file[self.camels_entry_name]['instruments'][instrument_name]['settings'][key][()]
+                        settings_value = hdf5_file[self.camels_entry_name][
+                            'instruments'
+                        ][instrument_name]['settings'][key][()]
                         # Decode if bytes
                         if isinstance(settings_value, bytes):
                             settings_value = settings_value.decode('utf-8')
@@ -306,10 +366,10 @@ class CamelsParser(MatchingParser):
                     return obj
 
             settings_dict = ensure_str(settings_dict)
-            data.camels_instrument_settings = json.dumps(settings_dict, indent=2)
+            data.camels_instrument_settings = settings_dict
 
             # Add the CAMELS data file to the entry
-            camels_file_path = re.search(r"/raw/(.*)", mainfile)
+            camels_file_path = re.search(r'/raw/(.*)', mainfile)
             data.camels_file = camels_file_path.group(1)
 
             # Get the user with the user id from the file
@@ -393,9 +453,18 @@ class CamelsParser(MatchingParser):
             return data
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    def is_mainfile(self, filename: str, mime: str, buffer: bytes, decoded_buffer: str, compression: str = None) -> Union[bool, Iterable[str]]:
+    def is_mainfile(
+        self,
+        filename: str,
+        mime: str,
+        buffer: bytes,
+        decoded_buffer: str,
+        compression: str = None,
+    ) -> Union[bool, Iterable[str]]:
         # First, run the parent's method.
-        result = super().is_mainfile(filename, mime, buffer, decoded_buffer, compression)
+        result = super().is_mainfile(
+            filename, mime, buffer, decoded_buffer, compression
+        )
         # If the parent's method returns False (or any value indicating a failure), return immediately.
         if not result:
             return result
@@ -404,7 +473,7 @@ class CamelsParser(MatchingParser):
                 # The attribute might be bytes, so decode if necessary
                 file_type_value = f.attrs.get('file_type')
                 if file_type_value is None:
-                    print("\nNo file_type attribute found in the file.")
+                    print('\nNo file_type attribute found in the file.')
                     # Check to see if the file is a legacy CAMELS file
                     # Check if CAMELS_ is in any of the top level keys of the HDF5 file
                     if any('CAMELS_' in key for key in f.keys()):
@@ -414,7 +483,7 @@ class CamelsParser(MatchingParser):
                         print("File is not a 'NOMAD CAMELS' file.")
                     return False
         except Exception as e:
-            print(f"\nError while checking file type: {e}")
+            print(f'\nError while checking file type: {e}')
             return False
         if file_type_value == 'NOMAD CAMELS':
             print("File is a 'NOMAD CAMELS' file.")
@@ -422,6 +491,7 @@ class CamelsParser(MatchingParser):
         else:
             print("file type is not 'NOMAD CAMELS', but: ", file_type_value)
             return False
+
 
 def try_convert_to_number(value):
     # Attempt to convert string to a number (int or float)
@@ -432,7 +502,6 @@ def try_convert_to_number(value):
         return int_val
     except (ValueError, TypeError):
         pass
-
 
     try:
         # Try float if int fails
