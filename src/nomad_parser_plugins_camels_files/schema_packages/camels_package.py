@@ -1,4 +1,5 @@
 from nomad.datamodel import Schema
+from nomad.datamodel.hdf5 import HDF5Reference
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
     Filter,
@@ -7,9 +8,7 @@ from nomad.datamodel.metainfo.annotations import (
 from nomad.datamodel.metainfo.basesections import (
     Measurement,
 )
-from nomad.datamodel.hdf5 import HDF5Reference
-from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section, JSON
-
+from nomad.metainfo import JSON, Datetime, Quantity, SchemaPackage, Section
 
 m_package = SchemaPackage()
 
@@ -125,7 +124,6 @@ class CamelsMeasurement(Measurement, Schema):
     camels_instrument_settings = Quantity(
         type=JSON,
         description='CAMELS instrument settings',
-
     )
     hdf5_file = Quantity(
         type=HDF5Reference,
@@ -144,7 +142,6 @@ class CamelsMeasurement(Measurement, Schema):
         """
         super(CamelsMeasurement, self).normalize(archive, logger)
         archive.results.eln.tags = archive.data.measurement_tags
-
 
 
 m_package.__init_metainfo__()
