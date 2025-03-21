@@ -3,7 +3,7 @@ from nomad.config.models.plugins import ParserEntryPoint
 
 class CamelsParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from nomad_camels_plugin.parsers.parser import CamelsParser
+        from nomad_parser_plugins_camels_files.parsers.parser import CamelsParser
 
         return CamelsParser(**self.dict())
 
