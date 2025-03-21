@@ -14,9 +14,7 @@ from nomad.config.models.ui import (
     WidgetTerms,
 )
 
-schema = (
-    'nomad_parser_plugins_camels_files.schema_packages.camels_package.CamelsMeasurement'
-)
+schema = 'nomad_camels_plugin.schema_packages.camels_package.CamelsMeasurement'
 
 camels_app = AppEntryPoint(
     name='CAMELS App',

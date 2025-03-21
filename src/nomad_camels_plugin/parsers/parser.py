@@ -140,9 +140,9 @@ class CamelsParser(MatchingParser):
             )
 
             # Get protocol json from the file
-            protocol_json_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
-                'protocol_json'
-            ][()]
+            protocol_json_bytes = hdf5_file[self.camels_entry_name][
+                'measurement_details'
+            ]['protocol_json'][()]
             data.protocol_json = json.loads(protocol_json_bytes.decode('utf-8'))
 
             # Get the end time from the file

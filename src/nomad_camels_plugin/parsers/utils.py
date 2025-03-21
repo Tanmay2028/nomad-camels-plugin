@@ -5,7 +5,7 @@ from nomad.datamodel.context import ClientContext
 
 
 def get_reference(upload_id, entry_id):
-    return f"../uploads/{upload_id}/archive/{entry_id}"
+    return f'../uploads/{upload_id}/archive/{entry_id}'
 
 
 def get_entry_id(upload_id, filename):
@@ -15,7 +15,7 @@ def get_entry_id(upload_id, filename):
 
 
 def get_hash_ref(upload_id, filename):
-    return f"{get_reference(upload_id, get_entry_id(upload_id, filename))}#data"
+    return f'{get_reference(upload_id, get_entry_id(upload_id, filename))}#data'
 
 
 def nan_equal(a, b):
@@ -64,20 +64,20 @@ def create_archive(
     if isinstance(context, ClientContext):
         return None
     if file_exists:
-        with context.raw_file(filename, "r") as file:
+        with context.raw_file(filename, 'r') as file:
             existing_dict = yaml.safe_load(file)
             dicts_are_equal = dict_nan_equal(existing_dict, entry_dict)
     if not file_exists or overwrite or dicts_are_equal:
-        with context.raw_file(filename, "w") as newfile:
-            if file_type == "json":
+        with context.raw_file(filename, 'w') as newfile:
+            if file_type == 'json':
                 json.dump(entry_dict, newfile)
-            elif file_type == "yaml":
+            elif file_type == 'yaml':
                 yaml.dump(entry_dict, newfile)
         context.upload.process_updated_raw_file(filename, allow_modify=True)
     elif file_exists and not overwrite and not dicts_are_equal:
         logger.error(
-            f"{filename} archive file already exists. "
-            f"You are trying to overwrite it with a different content. "
-            f"To do so, remove the existing archive and click reprocess again."
+            f'{filename} archive file already exists. '
+            f'You are trying to overwrite it with a different content. '
+            f'To do so, remove the existing archive and click reprocess again.'
         )
     return get_hash_ref(context.upload_id, filename)
