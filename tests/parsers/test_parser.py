@@ -3,7 +3,7 @@ import logging
 
 from nomad.datamodel import EntryArchive
 
-from nomad_parser_plugins_camels_files.parsers.parser import CamelsParser
+from nomad_camels_plugin.parsers.parser import CamelsParser
 
 
 def test_parse_CAMELS_file_exact_values():

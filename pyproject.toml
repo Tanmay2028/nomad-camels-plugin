@@ -111,10 +111,10 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [project.entry-points.'nomad.plugin']
-camels_schema_package = "nomad_parser_plugins_camels_files.schema_packages:camels_schema_package"
-camels_parser = "nomad_parser_plugins_camels_files.parsers:camels_parser"
-camels_app = "nomad_parser_plugins_camels_files.apps:camels_app"
-# camels_normalizer = "nomad_parser_plugins_camels_files.normalizers:camels_normalizer"
+camels_schema_package = "nomad_camels_plugin.schema_packages:camels_schema_package"
+camels_parser = "nomad_camels_plugin.parsers:camels_parser"
+camels_app = "nomad_camels_plugin.apps:camels_app"
+# camels_normalizer = "nomad_camels_plugin.normalizers:camels_normalizer"
 
 [tool.cruft]
 # Avoid updating workflow files, this leads to permissions issues
