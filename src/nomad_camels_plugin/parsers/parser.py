@@ -24,7 +24,7 @@ from nomad.datamodel.metainfo.basesections import (
 )
 from nomad.parsing.parser import MatchingParser
 
-from nomad_parser_plugins_camels_files.schema_packages.camels_package import (
+from nomad_camels_plugin.schema_packages.camels_package import (
     CamelsMeasurement,
 )
 
