@@ -9,10 +9,10 @@ if TYPE_CHECKING:
         BoundLogger,
     )
 
+import json
 import os
 import re
 from datetime import datetime
-import json
 
 import h5py
 import numpy as np

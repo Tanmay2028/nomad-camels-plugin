@@ -1,5 +1,6 @@
 import json
 import math
+
 import yaml
 from nomad.datamodel.context import ClientContext
 

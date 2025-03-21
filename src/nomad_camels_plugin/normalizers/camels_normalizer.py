@@ -1,5 +1,3 @@
-from typing import Dict
-
 from nomad.datamodel import EntryArchive
 from nomad.normalizing import Normalizer
 
