@@ -4,6 +4,7 @@ from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
     Filter,
     SectionProperties,
+    H5WebAnnotation,
 )
 from nomad.datamodel.metainfo.basesections import (
     Measurement,
@@ -35,7 +36,8 @@ class CamelsMeasurement(Measurement, Schema):
                     'camels_file',
                 ],
             )
-        )
+        ),
+        a_h5web=H5WebAnnotation(signal='hdf5_file')
     )
     measurement_description = Quantity(
         type=str,
@@ -126,7 +128,7 @@ class CamelsMeasurement(Measurement, Schema):
         description='CAMELS instrument settings',
     )
     hdf5_file = Quantity(
-        type=HDF5Reference,
+        type=HDF5Reference
     )
 
     def normalize(self, archive, logger: 'BoundLogger') -> None:
