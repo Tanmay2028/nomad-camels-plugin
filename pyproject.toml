@@ -15,7 +15,7 @@ classifiers = [
 ]
 name = "nomad-camels-plugin"
 description = "Parser for HDF5 files coming from NOMAD CAMELS."
-version = "0.1.0"
+version = "0.1.2"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
