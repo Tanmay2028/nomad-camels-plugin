@@ -415,6 +415,19 @@ class CamelsParser(MatchingParser):
                     user_id_string = user_id_bytes.decode('utf-8')
                 data.camels_user = user_id_string
 
+            except Exception as e:
+                logger.warning(
+                    f'Error while fetching user data from the database: {e}'
+                )
+                user_id_bytes = hdf5_file[self.camels_entry_name]['user']['name'][()]
+                if isinstance(user_id_bytes, int) or isinstance(
+                    user_id_bytes, np.int64
+                ):
+                    user_id_string = user_id_bytes.decode('utf-8')
+                else:
+                    user_id_string = user_id_bytes.decode('utf-8')
+                data.camels_user = user_id_string
+
             # Get the python script that was used to generate the data
             try:
                 python_script_bytes = hdf5_file[self.camels_entry_name][
