@@ -9,10 +9,10 @@ if TYPE_CHECKING:
         BoundLogger,
     )
 
-import json
 import os
 import re
 from datetime import datetime
+import json
 
 import h5py
 import numpy as np
@@ -29,6 +29,50 @@ from nomad_camels_plugin.schema_packages.camels_package import (
 )
 
 from .utils import create_archive
+
+
+def _process_h5_value(value):
+    """
+    Cleans up a value from an HDF5 dataset into standard Python types.
+    """
+    # Convert numpy scalar types (e.g., np.float64) to native Python types
+    if isinstance(value, np.generic):
+        return value.item()
+
+    # Convert numpy arrays to lists, decoding bytes to strings if necessary
+    if isinstance(value, np.ndarray):
+        # For object arrays that might contain bytes (common in h5py)
+        if value.dtype.kind in ('O', 'S'):
+            return [
+                v.decode('utf-8') if isinstance(v, bytes) else v for v in value
+            ]
+        # For other array types, just convert to a list
+        return value.tolist()
+
+    # Decode a single byte string
+    if isinstance(value, bytes):
+        return value.decode('utf-8')
+
+    return value
+
+
+def _read_h5_group_recursively(h5_group):
+    """
+    Recursively reads items in an HDF5 group and returns them as a
+    nested dictionary.
+    """
+    settings = {}
+    for key, item in h5_group.items():
+        if isinstance(item, h5py.Group):
+            # If the item is a group, recurse into it
+            settings[key] = _read_h5_group_recursively(item)
+        elif isinstance(item, h5py.Dataset):
+            # If it's a dataset, read its value and process it
+            raw_value = item[()]
+            processed_value = _process_h5_value(raw_value)
+            # Your original logic to convert strings to numbers
+            settings[key] = try_convert_to_number(processed_value)
+    return settings
 
 
 class CamelsParser(MatchingParser):
@@ -140,9 +184,9 @@ class CamelsParser(MatchingParser):
             )
 
             # Get protocol json from the file
-            protocol_json_bytes = hdf5_file[self.camels_entry_name][
-                'measurement_details'
-            ]['protocol_json'][()]
+            protocol_json_bytes = hdf5_file[self.camels_entry_name]['measurement_details'][
+                'protocol_json'
+            ][()]
             data.protocol_json = json.loads(protocol_json_bytes.decode('utf-8'))
 
             # Get the end time from the file
@@ -277,80 +321,13 @@ class CamelsParser(MatchingParser):
 
             # Get the instrument settings from the file
             settings_dict = {}  # Dictionary to hold all instruments and their settings
+            instruments_group = hdf5_file[self.camels_entry_name]['instruments']
+            for instrument_name in instruments_group.keys():
+                # Target the 'settings' group for the current instrument
+                settings_group = instruments_group[instrument_name]['settings']
 
-            instruments = hdf5_file[self.camels_entry_name]['instruments'].keys()
-            for instrument_name in instruments:
-                settings_dict[
-                    instrument_name
-                ] = {}  # Initialize a dict for this instrument's settings
-                settings_keys = hdf5_file[self.camels_entry_name]['instruments'][
-                    instrument_name
-                ]['settings'].keys()
-                for key in settings_keys:
-                    # Check if the object is of kind group
-                    if isinstance(
-                        hdf5_file[self.camels_entry_name]['instruments'][
-                            instrument_name
-                        ]['settings'][key],
-                        h5py.Group,
-                    ):
-                        settings_dict[instrument_name][
-                            key
-                        ] = {}  # Initialize a dict for this key
-                        # Get each element in the group
-                        for sub_key in hdf5_file[self.camels_entry_name]['instruments'][
-                            instrument_name
-                        ]['settings'][key].keys():
-                            settings_value = hdf5_file[self.camels_entry_name][
-                                'instruments'
-                            ][instrument_name]['settings'][key][sub_key][()]
-
-                            # Convert numpy scalar to Python type if needed
-                            if (
-                                hasattr(settings_value, 'shape')
-                                and settings_value.shape == ()
-                            ):
-                                settings_value = settings_value.item()
-
-                            # If we have a list or array, decode each element if needed
-                            if isinstance(settings_value, np.ndarray):
-                                # If it's a single-element array
-                                if settings_value.size == 1:
-                                    settings_value = settings_value.item()
-                                else:
-                                    # Handle multi-element arrays here
-                                    decoded_list = []
-                                    for val in settings_value:
-                                        if isinstance(val, bytes):
-                                            val = val.decode('utf-8')
-                                        val = try_convert_to_number(val)
-                                        decoded_list.append(val)
-                                    settings_value = (
-                                        decoded_list
-                                        if len(decoded_list) > 1
-                                        else decoded_list[0]
-                                    )
-                            else:
-                                # If it's already a Python type, just continue
-                                # This includes the later logic you have for single values
-                                if isinstance(settings_value, bytes):
-                                    settings_value = settings_value.decode('utf-8')
-                                settings_value = try_convert_to_number(settings_value)
-
-                            settings_dict[instrument_name][key][sub_key] = (
-                                settings_value
-                            )
-                    else:
-                        settings_value = hdf5_file[self.camels_entry_name][
-                            'instruments'
-                        ][instrument_name]['settings'][key][()]
-                        # Decode if bytes
-                        if isinstance(settings_value, bytes):
-                            settings_value = settings_value.decode('utf-8')
-                        # Try to convert to number if possible
-                        settings_value = try_convert_to_number(settings_value)
-
-                        settings_dict[instrument_name][key] = settings_value
+                # Call the recursive function to read all nested settings
+                settings_dict[instrument_name] = _read_h5_group_recursively(settings_group)
 
             # Convert the entire dictionary to a JSON string
             def ensure_str(obj):
@@ -388,6 +365,7 @@ class CamelsParser(MatchingParser):
                 response = requests.get(
                     url,
                     headers=headers,
+                    timeout=5,
                 )
 
                 if response.status_code == 200:
@@ -406,19 +384,6 @@ class CamelsParser(MatchingParser):
 
             except KeyError:
                 logger.warning('No NOMAD user found in the CAMELS file')
-                user_id_bytes = hdf5_file[self.camels_entry_name]['user']['name'][()]
-                if isinstance(user_id_bytes, int) or isinstance(
-                    user_id_bytes, np.int64
-                ):
-                    user_id_string = user_id_bytes.decode('utf-8')
-                else:
-                    user_id_string = user_id_bytes.decode('utf-8')
-                data.camels_user = user_id_string
-
-            except Exception as e:
-                logger.warning(
-                    f'Error while fetching user data from the database: {e}'
-                )
                 user_id_bytes = hdf5_file[self.camels_entry_name]['user']['name'][()]
                 if isinstance(user_id_bytes, int) or isinstance(
                     user_id_bytes, np.int64
