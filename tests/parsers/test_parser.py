@@ -9,6 +9,16 @@ from nomad_camels_plugin.parsers.parser import CamelsParser
 def test_parse_CAMELS_file_exact_values():
     parser = CamelsParser()
     archive = EntryArchive()
+    # check if file is matched as mainfile
+    assert (
+        parser.is_mainfile(
+            filename='tests/data/raw/test_CAMELS_file.nxs',
+            mime='application/x-hdf',
+            buffer=b'',
+            decoded_buffer='',
+        )
+        is True
+    )
     data = parser.parse(
         'tests/data/raw/test_CAMELS_file.nxs',
         archive,
@@ -339,3 +349,7 @@ def test_parse_CAMELS_file_exact_values():
     # Assert that the CAMELS user is a non-empty string
     assert isinstance(data.camels_user, str)
     assert data.camels_user == 'default_user'
+
+
+if __name__ == '__main__':
+    test_parse_CAMELS_file_exact_values()
