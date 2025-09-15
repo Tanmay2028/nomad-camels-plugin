@@ -2,38 +2,45 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from nomad.datamodel.datamodel import (
-        EntryArchive,
-    )
     from structlog.stdlib import (
         BoundLogger,
+    )
+
+    from nomad.datamodel.datamodel import (
+        EntryArchive,
     )
 
 import json
 import os
 import re
 from datetime import datetime
-import nomad_camels_toolbox as nct
-import importlib.metadata
+
 import h5py
+import nomad_camels_toolbox as nct
 import numpy as np
+
 from nomad.config import config
 from nomad.datamodel.datamodel import EntryMetadata
 from nomad.datamodel.metainfo.basesections import (
     CompositeSystemReference,
     InstrumentReference,
 )
-from nomad.parsing.parser import MatchingParser
-
-from nomad_camels_plugin.schema_packages.camels_package import (
-    CamelsMeasurement,CamelsMeasurementDiode
-)
 from nomad.datamodel.metainfo.plot import PlotlyFigure
+from nomad.parsing.parser import MatchingParser
+from nomad_camels_plugin.schema_packages.camels_package import (
+    CamelsMeasurement,
+    CamelsMeasurementDiode,
+)
 
 from .utils import create_archive
 
 
 class CamelsParser(MatchingParser):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._mainfile_mime_re = re.compile('(application/x-hdf)')
+        self._mainfile_name_re = re.compile(r'^.*\.(h5|hdf5|nxs)$')
+
     def parse(
         self,
         mainfile: str,
@@ -41,7 +48,7 @@ class CamelsParser(MatchingParser):
         logger: 'BoundLogger',
         child_archives: dict[str, 'EntryArchive'] = None,
         testing: bool = False,
-        schema_to_use = CamelsMeasurement,
+        schema_to_use=CamelsMeasurement,
     ) -> None:
         self.archive = archive
         *_, self._fname = mainfile.rsplit('/', 1)
@@ -419,9 +426,7 @@ class CamelsParser(MatchingParser):
                 data.camels_user = user_id_string
 
             except Exception as e:
-                logger.warning(
-                    f'Error while fetching user data from the database: {e}'
-                )
+                logger.warning(f'Error while fetching user data from the database: {e}')
                 user_id_bytes = hdf5_file[self.camels_entry_name]['user']['name'][()]
                 if isinstance(user_id_bytes, int) or isinstance(
                     user_id_bytes, np.int64
@@ -506,9 +511,21 @@ class CamelsParser(MatchingParser):
             return False
         if file_type_value == 'NOMAD CAMELS':
             with h5py.File(filename, 'r') as f:
-                print("Tags: ",f["CAMELS_entry/measurement_details/measurement_tags"][:])
-                if b"diode" in f["CAMELS_entry/measurement_details/measurement_tags"][:]:
-                    print("This is a special diode measurement and has its own entry. now returning false")
+                for key in f.keys():
+                    if "CAMELS_" in key:
+                        print(f'Found CAMELS key: {key}')
+                        camels_key = key
+                        break
+                print(
+                    'Tags: ', f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                )
+                if (
+                    b'diode'
+                    in f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                ):
+                    print(
+                        'This is a special diode measurement and has its own entry. now returning false'
+                    )
                     return False
             print("File is a 'NOMAD CAMELS' file.")
             return True
@@ -525,7 +542,7 @@ class CamelsParserDiode(CamelsParser):
         logger: 'BoundLogger',
         child_archives: dict[str, 'EntryArchive'] = None,
         testing: bool = False,
-        schema_to_use = CamelsMeasurementDiode,
+        schema_to_use=CamelsMeasurementDiode,
     ) -> None:
         self.archive = archive
         *_, self._fname = mainfile.rsplit('/', 1)
@@ -903,9 +920,7 @@ class CamelsParserDiode(CamelsParser):
                 data.camels_user = user_id_string
 
             except Exception as e:
-                logger.warning(
-                    f'Error while fetching user data from the database: {e}'
-                )
+                logger.warning(f'Error while fetching user data from the database: {e}')
                 user_id_bytes = hdf5_file[self.camels_entry_name]['user']['name'][()]
                 if isinstance(user_id_bytes, int) or isinstance(
                     user_id_bytes, np.int64
@@ -927,8 +942,8 @@ class CamelsParserDiode(CamelsParser):
             data.hdf5_file = f'CAMELS_data/{sample_name}/{self._fname}#/{self.camels_entry_name}/data'
         plots_from_hdf5 = nct.recreate_plots(mainfile, show_figures=False)
         for plot_from_hdf5 in plots_from_hdf5.values():
-            x_data = np.array(plot_from_hdf5["data"][0]["x"])
-            y_data = np.array(plot_from_hdf5["data"][0]["y"])
+            x_data = np.array(plot_from_hdf5['data'][0]['x'])
+            y_data = np.array(plot_from_hdf5['data'][0]['y'])
             max_yvalue = max(y_data)
             mask = y_data > 0.5 * max_yvalue
             fit_result = np.polyfit(x_data[mask], y_data[mask], 1)
@@ -939,14 +954,16 @@ class CamelsParserDiode(CamelsParser):
             x_intercept = -intercept / slope
             data.threshold_voltage = x_intercept
             data.serial_resistance = 1 / slope
-            plot_from_hdf5.add_trace({
-                "type": "scatter",
-                "mode": "lines",
-                "name": "Fit Line",
-                "x": x_data,
-                "y": fit_line,
-                "line": {"dash": "dash"}
-            })
+            plot_from_hdf5.add_trace(
+                {
+                    'type': 'scatter',
+                    'mode': 'lines',
+                    'name': 'Fit Line',
+                    'x': x_data,
+                    'y': fit_line,
+                    'line': {'dash': 'dash'},
+                }
+            )
             data.figures.append(PlotlyFigure(figure=plot_from_hdf5.to_plotly_json()))
 
         # -------------------------------
@@ -988,12 +1005,12 @@ class CamelsParserDiode(CamelsParser):
         result = MatchingParser.is_mainfile(
             self, filename, mime, buffer, decoded_buffer, compression
         )
-        print("Result from Matching parser: ", result)
+        print('Result from Matching parser: ', result)
         if not result:
             return result
-        print("-----------------")
-        print("Running the Diode Parser")
-        print("-----------------")
+        print('-----------------')
+        print('Running the Diode Parser')
+        print('-----------------')
         try:
             with h5py.File(filename, 'r') as f:
                 # The attribute might be bytes, so decode if necessary
@@ -1013,15 +1030,28 @@ class CamelsParserDiode(CamelsParser):
             return False
         if file_type_value == 'NOMAD CAMELS':
             with h5py.File(filename, 'r') as f:
-                print("Tags: ",f["CAMELS_entry/measurement_details/measurement_tags"][:])
-                if b"diode" in f["CAMELS_entry/measurement_details/measurement_tags"][:]:
-                    print("This is a special diode measurement will now be parsed by the specialty parser.")
+                for key in f.keys():
+                    if "CAMELS_" in key:
+                        print(f'Found CAMELS key: {key}')
+                        camels_key = key
+                        break
+                print(
+                    'Tags: ', f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                )
+                if (
+                    b'diode'
+                    in f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                ):
+                    print(
+                        'This is a special diode measurement will now be parsed by the specialty parser.'
+                    )
                     return True
             print("File is a 'NOMAD CAMELS' file.")
             return False
         else:
             print("file type is not 'NOMAD CAMELS', but: ", file_type_value)
             return False
+
 
 def try_convert_to_number(value):
     # Attempt to convert string to a number (int or float)
