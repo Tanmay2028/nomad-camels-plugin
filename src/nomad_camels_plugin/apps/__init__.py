@@ -8,6 +8,7 @@ from nomad.config.models.ui import (
     Menu,
     MenuItemCustomQuantities,
     MenuItemHistogram,
+    MenuItemOption,
     MenuItemTerms,
     SearchQuantities,
     WidgetHistogram,
@@ -15,6 +16,10 @@ from nomad.config.models.ui import (
 )
 
 schema = 'nomad_camels_plugin.schema_packages.camels_package.CamelsMeasurement'
+schema_diode = (
+    'nomad_camels_plugin.schema_packages.camels_package.CamelsMeasurementDiode'
+)
+schemas = [f'*#{schema}', f'*#{schema_diode}']
 
 camels_app = AppEntryPoint(
     name='CAMELS App',
@@ -23,7 +28,7 @@ camels_app = AppEntryPoint(
         label='CAMELS App',
         path='myapp',
         category='Experiment',
-        search_quantities=SearchQuantities(include=[f'*#{schema}']),
+        search_quantities=SearchQuantities(include=schemas),
         columns=[
             Column(search_quantity=f'data.name#{schema}', selected=True),
             Column(search_quantity=f'data.datetime#{schema}', selected=True),
@@ -105,6 +110,17 @@ camels_app = AppEntryPoint(
                     search_quantity=f'data.camels_user#{schema}',
                 ),
                 MenuItemTerms(
+                    title='Type of Measurement',
+                    type='terms',
+                    search_quantity='results.eln.sections',
+                    options={
+                        'CamelsMeasurement': MenuItemOption(label='Camels Measurement'),
+                        'CamelsMeasurementDiode': MenuItemOption(
+                            label='Camels Measurement Diode'
+                        ),
+                    },
+                ),
+                MenuItemTerms(
                     title='Instrument name',
                     type='terms',
                     search_quantity=f'data.instruments.name#{schema}',
@@ -112,6 +128,8 @@ camels_app = AppEntryPoint(
                 MenuItemCustomQuantities(),
             ],
         ),
-        filters_locked={'section_defs.definition_qualified_name': schema},
+        filters_locked={
+            'results.eln.sections': ['CamelsMeasurement', 'CamelsMeasurementDiode']
+        },
     ),
 )
