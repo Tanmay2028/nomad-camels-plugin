@@ -2,12 +2,11 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from structlog.stdlib import (
-        BoundLogger,
-    )
-
     from nomad.datamodel.datamodel import (
         EntryArchive,
+    )
+    from structlog.stdlib import (
+        BoundLogger,
     )
 
 import json
@@ -18,7 +17,6 @@ from datetime import datetime
 import h5py
 import nomad_camels_toolbox as nct
 import numpy as np
-
 from nomad.config import config
 from nomad.datamodel.datamodel import EntryMetadata
 from nomad.datamodel.metainfo.basesections import (
@@ -27,6 +25,7 @@ from nomad.datamodel.metainfo.basesections import (
 )
 from nomad.datamodel.metainfo.plot import PlotlyFigure
 from nomad.parsing.parser import MatchingParser
+
 from nomad_camels_plugin.schema_packages.camels_package import (
     CamelsMeasurement,
     CamelsMeasurementDiode,
@@ -512,7 +511,7 @@ class CamelsParser(MatchingParser):
         if file_type_value == 'NOMAD CAMELS':
             with h5py.File(filename, 'r') as f:
                 for key in f.keys():
-                    if "CAMELS_" in key:
+                    if 'CAMELS_' in key:
                         print(f'Found CAMELS key: {key}')
                         camels_key = key
                         break
@@ -522,9 +521,11 @@ class CamelsParser(MatchingParser):
                 if (
                     b'diode'
                     in f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                    and b'demo'
+                    in f[f'{camels_key}/measurement_details/measurement_tags'][:]
                 ):
                     print(
-                        'This is a special diode measurement and has its own entry. now returning false'
+                        'This is a special diode demo measurement and has its own entry. now returning false'
                     )
                     return False
             print("File is a 'NOMAD CAMELS' file.")
@@ -945,7 +946,7 @@ class CamelsParserDiode(CamelsParser):
             x_data = np.array(plot_from_hdf5['data'][0]['x'])
             y_data = np.array(plot_from_hdf5['data'][0]['y'])
             max_yvalue = max(y_data)
-            mask = y_data > 0.5 * max_yvalue
+            mask = y_data > 0.7 * max_yvalue
             fit_result = np.polyfit(x_data[mask], y_data[mask], 1)
             slope = fit_result[0]
             intercept = fit_result[1]
@@ -1005,12 +1006,8 @@ class CamelsParserDiode(CamelsParser):
         result = MatchingParser.is_mainfile(
             self, filename, mime, buffer, decoded_buffer, compression
         )
-        print('Result from Matching parser: ', result)
         if not result:
             return result
-        print('-----------------')
-        print('Running the Diode Parser')
-        print('-----------------')
         try:
             with h5py.File(filename, 'r') as f:
                 # The attribute might be bytes, so decode if necessary
@@ -1031,7 +1028,7 @@ class CamelsParserDiode(CamelsParser):
         if file_type_value == 'NOMAD CAMELS':
             with h5py.File(filename, 'r') as f:
                 for key in f.keys():
-                    if "CAMELS_" in key:
+                    if 'CAMELS_' in key:
                         print(f'Found CAMELS key: {key}')
                         camels_key = key
                         break
@@ -1040,6 +1037,8 @@ class CamelsParserDiode(CamelsParser):
                 )
                 if (
                     b'diode'
+                    in f[f'{camels_key}/measurement_details/measurement_tags'][:]
+                    and b'demo'
                     in f[f'{camels_key}/measurement_details/measurement_tags'][:]
                 ):
                     print(
