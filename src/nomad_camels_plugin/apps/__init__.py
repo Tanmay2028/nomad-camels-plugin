@@ -39,56 +39,13 @@ camels_app = AppEntryPoint(
             Column(search_quantity=f'data.protocol_overview#{schema}'),
             Column(search_quantity=f'data.description#{schema}'),
         ],
-        # dashboard = Dashboard(
-        # widgets=[
-        #             WidgetTerms(
-        #                 title="Sample name",
-        #                 type="terms",
-        #                 layout={
-        #                     BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-        #                 },
-        #                 search_quantity=f"data.samples.name#{schema}"
-        #         ),
-        #             WidgetTerms(
-        #                 title="User",
-        #                 type="terms",
-        #                 layout={
-        #                     BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-        #                 },
-        #                 search_quantity=f"data.camels_user#{schema}"
-        #         ),
-        #         WidgetTerms(
-        #             title='Instrument name',
-        #             type='terms',
-        #             layout={
-        #                 BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-        #             },
-        #             search_quantity=f'data.instruments.name#{schema}'
-        #         ),
-        #         WidgetHistogram(
-        #             title='Start time',
-        #             type='histogram',
-        #             layout={
-        #                 BreakpointEnum.MD: Layout(h=6, w=6, x=0, y=0)
-        #             },
-        #             x=f'data.datetime#{schema}'
-        #         ),
-        #         WidgetTerms(
-        #             title='Tags',
-        #             type='terms',
-        #             layout={
-        #                 BreakpointEnum.MD: Layout(h=6, w=4, x=1, y=0)
-        #             },
-        #             search_quantity=f'results.eln.tags'
-        #         ),
-        #     ]
-        # ),
         menu=Menu(
             items=[
                 MenuItemTerms(
                     title='Sample name',
                     type='terms',
-                    search_quantity=f'data.samples.name#{schema}',
+                    search_quantity=
+                        f'data.samples.name#{schema}'
                 ),
                 MenuItemHistogram(
                     title='Start time', type='histogram', x=f'data.datetime#{schema}'
