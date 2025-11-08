@@ -10,11 +10,12 @@ from nomad.datamodel.metainfo.basesections import (
     Measurement,
 )
 from nomad.metainfo import JSON, Datetime, Quantity, SchemaPackage, Section
-
+from nomad.datamodel.metainfo.plot import PlotSection, PlotlyFigure
 m_package = SchemaPackage()
+import numpy as np
 
 
-class CamelsMeasurement(Measurement, Schema):
+class CamelsMeasurement(Measurement, PlotSection, Schema):
     m_def = Section(
         a_eln=ELNAnnotation(
             properties=SectionProperties(
@@ -37,7 +38,11 @@ class CamelsMeasurement(Measurement, Schema):
                 ],
             )
         ),
+<<<<<<< HEAD
         a_h5web=H5WebAnnotation(signal='hdf5_file')
+=======
+        a_h5web=H5WebAnnotation(signal='hdf5_file'),
+>>>>>>> upstream/main
     )
     measurement_description = Quantity(
         type=str,
@@ -144,6 +149,57 @@ class CamelsMeasurement(Measurement, Schema):
         """
         super(CamelsMeasurement, self).normalize(archive, logger)
         archive.results.eln.tags = archive.data.measurement_tags
+
+class CamelsMeasurementDiode(CamelsMeasurement):
+    m_def = Section(
+        a_eln=ELNAnnotation(
+            properties=SectionProperties(
+                visible=Filter(
+                    exclude=['location', 'lab_id', 'description'],
+                ),
+                order=[
+                    'name',
+                    'datetime',
+                    'figures',
+                    'hdf5_file',
+                    'threshold_voltage',
+                    'serial_resistance',
+                    'end_time',
+                    'session_name',
+                    'measurement_tags',
+                    'measurement_description',
+                    'measurement_comments',
+                    'protocol_description',
+                    'protocol_overview',
+                    'protocol_name',
+                    'camels_user',
+                    'camels_file',
+                ],
+            )
+        ),
+        a_h5web=H5WebAnnotation(signal='hdf5_file'),
+    )
+    threshold_voltage = Quantity(
+        type=np.float64,
+        unit='volt',
+        description='Minimum forward voltage a diode requires to begin conducting current.',
+        a_eln=ELNAnnotation(
+            component='NumberEditQuantity',
+            label='Diode threshold voltage',
+            defaultDisplayUnit='volt',
+        ),
+    )
+    serial_resistance = Quantity(
+        type=np.float64,
+        unit='ohm',
+        description='Series resistance of the diode.',
+        a_eln=ELNAnnotation(
+            component='NumberEditQuantity',
+            label='Diode serial resistance',
+            defaultDisplayUnit='ohm',
+        ),
+    )
+
 
 
 m_package.__init_metainfo__()

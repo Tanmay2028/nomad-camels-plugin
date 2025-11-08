@@ -15,7 +15,7 @@ classifiers = [
 ]
 name = "nomad-camels-plugin"
 description = "Parser for HDF5 files coming from NOMAD CAMELS."
-version = "0.1.0"
+version = "0.1.2"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
@@ -28,6 +28,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "nomad-lab[infrastructure]>=1.3.0",
     "python-magic-bin; sys_platform == 'win32'",
+    "nomad-camels-toolbox[plotly]>=0.4.1",
 ]
 
 [project.urls]
@@ -113,6 +114,7 @@ where = ["src"]
 [project.entry-points.'nomad.plugin']
 camels_schema_package = "nomad_camels_plugin.schema_packages:camels_schema_package"
 camels_parser = "nomad_camels_plugin.parsers:camels_parser"
+camelsDiode_parser = "nomad_camels_plugin.parsers:camelsDiode_parser"
 camels_app = "nomad_camels_plugin.apps:camels_app"
 # camels_normalizer = "nomad_camels_plugin.normalizers:camels_normalizer"
 
