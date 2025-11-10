@@ -38,11 +38,7 @@ class CamelsMeasurement(Measurement, PlotSection, Schema):
                 ],
             )
         ),
-<<<<<<< HEAD
-        a_h5web=H5WebAnnotation(signal='hdf5_file')
-=======
         a_h5web=H5WebAnnotation(signal='hdf5_file'),
->>>>>>> upstream/main
     )
     measurement_description = Quantity(
         type=str,
