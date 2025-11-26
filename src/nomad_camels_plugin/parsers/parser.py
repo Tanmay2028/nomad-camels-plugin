@@ -443,8 +443,10 @@ class CamelsParser(MatchingParser):
                 data.camels_python_script = python_script_bytes.decode('utf-8')
             except KeyError:
                 logger.warning('No python script found in the CAMELS file')
-
-            data.hdf5_file = f'CAMELS_data/{sample_name}/{self._fname}#/{self.camels_entry_name}/data'
+            # Get the actual file path inside the NOMAD files system where you uploaded the file
+            path_in_filesystem = mainfile.split('/raw/')[1]
+            print('Path in filesystem: ', path_in_filesystem)
+            data.hdf5_file = f'{path_in_filesystem}#/{self.camels_entry_name}/data'
         plots_from_hdf5 = nct.recreate_plots(mainfile, show_figures=False)
         # plot_from_hdf5 = plots_from_hdf5[list(plots_from_hdf5.keys())[0]]
         for plot_from_hdf5 in plots_from_hdf5.values():
